@@ -1,0 +1,24 @@
+AI SECURITY LAB WORKSHOP MATERIALS LICENSE — DRAFT V1
+
+Copyright © 2026 AI Security Lab. All rights reserved except as expressly granted below.
+Original source: https://github.com/The-AI-Security-Lab/securing-ai-coding-agents
+
+IMPORTANT: This is a proposed custom license for review by the appropriate rights holder and legal counsel before publication. Confirm the legal name of the copyright owner and the person or entity authorized to grant commercial permissions.
+
+1. Scope. This license covers original workshop documentation, instructions, teaching materials, slides, and educational lab narratives in this repository, except files expressly governed by LICENSE-CODE.md or separate third-party terms. A file's expressly stated license takes precedence. This license does not replace third-party licenses.
+
+2. Permitted use. You may download, copy, run, and adapt covered materials for personal learning, academic research, and noncommercial educational use. You may use and adapt covered materials to teach colleagues inside your organization, without charging a separate training fee, provided you retain the attribution in section 4. This internal-teaching permission includes organizations engaged in commercial business.
+
+3. Contributions and sharing. You may submit proposed improvements through this repository's contribution process. You may share a link to the original repository. Public redistribution of substantial copies or adaptations of covered materials outside the repository requires written permission from the rights holder, except to the extent required by applicable law.
+
+4. Attribution. In permitted copies and adaptations, retain: “Based on AI Security Lab, Securing AI Coding Agents: From Guardrails to Verification” and the original repository URL above. Identify material changes you make. Do not suggest that AI Security Lab endorses your adaptation.
+
+5. Commercial restrictions. Written permission is required to sell, sublicense, package, or deliver the covered materials as paid training, paid consulting deliverables, or a commercial course or workshop. This restriction does not prohibit independently applying general ideas, skills, or methods learned from the materials, subject to applicable law and any separate software license.
+
+6. Branding. No trademark or endorsement rights are granted. Retaining required attribution is permitted; use of AI Security Lab or TechRiot names and logos to market your own offering requires separate authorization.
+
+7. Other rights. All rights not expressly granted are reserved. Applicable statutory exceptions are unaffected.
+
+8. Disclaimer. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE MATERIALS ARE PROVIDED “AS IS,” WITHOUT WARRANTIES OF ANY KIND. THE RIGHTS HOLDER DISCLAIMS LIABILITY FOR DAMAGES ARISING FROM USE OF THE MATERIALS TO THE MAXIMUM EXTENT PERMITTED BY LAW.
+
+For additional permissions, contact the rights holder through https://www.aisecuritylab.com/ . This website is not a substitute for identifying the legal contracting entity in a commercial agreement.

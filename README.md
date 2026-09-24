@@ -27,3 +27,11 @@ Define basic security evals and a small golden dataset. Use AI Security Lab's op
 Explore [AI Security Lab](https://www.aisecuritylab.com/) for open-source tools, research, learning resources, and future hands-on workshops.
 
 *Validated technical setup instructions and lab materials will be published separately. This repository currently contains participant orientation materials only.*
+
+## Licensing and contributions
+
+We welcome contributions of synthetic labs, security evals, and verification workflows. See [Contributing](CONTRIBUTING.md) before submitting changes.
+
+Workshop teaching materials and reusable code have **different proposed license terms**: see [Workshop materials license](LICENSE), [Code license](LICENSE-CODE.md), and [Notices](NOTICE.md). Personal learning, internal enterprise use of the harness, and attributed internal colleague-to-colleague teaching are intended to be permitted. Distributing the harness in a commercial product or using workshop materials for paid training or consulting requires separate written approval.
+
+**Publication note:** These custom license drafts require confirmation of the legal rights holder and legal review before they are treated as final. Third-party tools retain their own licenses. This workshop repository should be described as publicly available or source-available, not universally OSI open source.
