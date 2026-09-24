@@ -1,9 +1,8 @@
 # Know Before You Go
 
-This guide prepares you for **Securing AI Coding Agents: From Guardrails to
-Verification**, a 90-minute virtual workshop from the AI Security Lab. It is
-written for a broad audience and supports both people who want to run the
-exercises and people who want to follow the instructor.
+AI coding agents such as Claude Code and Codex can read and modify code, execute commands, and interact with development tools. How do we govern that authority, reduce unnecessary access, and verify whether the controls we configure actually work?
+
+In **Securing AI Coding Agents: From Guardrails to Verification**, a 90-minute virtual workshop from [AI Security Lab](https://www.aisecuritylab.com/), we explore these questions through two practical labs. You can run the exercises or follow the instructor.
 
 ## What you will learn
 
@@ -55,6 +54,18 @@ exercises with the instructor. You can follow the concepts, expected outcomes,
 and evidence review without running the commands locally. This is a supported
 way to participate, especially for a large virtual audience or when local
 compatibility is uncertain.
+
+## Hands-on preparation at a glance
+
+If you plan to run the exercises, prepare a laptop or approved development environment with:
+
+- a working terminal and permission to run workshop commands;
+- access to at least one supported coding agent, Claude Code **or** Codex;
+- working authentication for your chosen agent;
+- access to the workshop repository and required tools; and
+- time to complete the validated setup and preflight before the event.
+
+You do not need both agents. A GitHub account is recommended if you want to fork or push code, but is not required merely to download a public repository. Exact tool, version, and access requirements will be confirmed in the setup guide.
 
 ## If Claude Code or Codex is new to you
 
@@ -132,9 +143,6 @@ Before the event:
 5. keep the workshop guide available so you can switch to instructor-led
    participation if local setup is unavailable or incompatible.
 
-Exact installation commands, Python version requirements, agent setup, and
-repository commands are intentionally not included here. Validated setup
-instructions and the lab materials will be published separately before the
-event.
+Exact installation commands, Python version requirements, agent setup, and repository commands are intentionally not included here. **Bookmark the workshop repository:** the validated Hands-on Setup & Preflight guide and lab materials will be published there before the event.
 
 For updates and further learning, visit the [AI Security Lab](https://www.aisecuritylab.com/).

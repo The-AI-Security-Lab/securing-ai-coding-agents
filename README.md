@@ -1,38 +1,29 @@
 # Securing AI Coding Agents: From Guardrails to Verification
 
-**An AI Security Lab workshop**
+A hands-on workshop from **[AI Security Lab](https://www.aisecuritylab.com/)**.
 
-This 90-minute virtual workshop explores practical ways to secure AI coding
-agents, from governing their capabilities to verifying that security controls
-work as intended. Claude Code and Codex are both covered, with time for either
-hands-on participation or instructor-led follow-along.
+This 90-minute virtual workshop explores how to govern the capabilities of AI coding agents and verify that security controls work as intended. We cover both Claude Code and Codex. You can complete the exercises on your own machine or follow the instructor without installing the tools.
 
 ## Start here
 
-Read the [Know Before You Go guide](docs/know-before-you-go.md) before the
-workshop. It explains the learning goals, participation pathways, access
-considerations, and how to complete the preflight when the validated technical
-setup is available.
+**Attending the workshop?** Read the [Know Before You Go guide](docs/know-before-you-go.md) for the learning goals, participation options, and preparation advice.
 
-## Workshop outline
+**Planning to work hands-on?** The validated Hands-on Setup & Preflight guide will be published in this repository before the workshop. Please complete setup and authentication before the event. You need only one supported coding agent, not both.
 
-The workshop has two connected labs:
+**Bookmark this repository.** Return here for the setup guide, lab materials, and supporting resources as they become available. Links will be added when those materials are validated and published.
 
-1. **Agent hardening** — govern and harden AI coding agents with practical
-   guardrails.
-2. **Security verification** — use basic security evals, a small golden
-   dataset, a deterministic Python harness, and evidence collection to check
-   whether controls behave as intended.
+## Workshop labs
 
-You may execute the exercises yourself or follow the instructor's
-demonstration. The final participation route and technical setup will be
-confirmed before the event.
+### Lab 1 — Govern and harden AI coding agents
+
+Explore Claude Code and Codex architecture, security-relevant configurations, permissions, tools, and execution boundaries. Apply practical controls to reduce unnecessary agent authority.
+
+### Lab 2 — Verify security controls
+
+Define basic security evals and a small golden dataset. Use AI Security Lab's open-source tools and a deterministic Python harness to assess supported agent configurations, collect evidence, and distinguish configured restrictions from verified outcomes.
 
 ## Continue learning
 
-Learn more about the [AI Security Lab](https://www.aisecuritylab.com/) and its
-open-source tools, research, and learning resources.
+Explore [AI Security Lab](https://www.aisecuritylab.com/) for open-source tools, research, learning resources, and future hands-on workshops.
 
-Validated technical setup instructions and the lab materials will be published
-separately when they are ready. This repository currently contains the
-participant orientation material only.
+*Validated technical setup instructions and lab materials will be published separately. This repository currently contains participant orientation materials only.*
