@@ -8,6 +8,9 @@ sources:
   - ../../docs/know-before-you-go.md
   - ../../docs/hands-on-setup.md
   - ../../docs/stage-2a-validation-report.md
+  - ../../docs/stage-2a.1-kaapi-consumer-validation.md
+  - ../../scripts/kaapi_consumer.py
+  - ../../tests/test_kaapi_consumer.py
 tags: [provenance, repository]
 ---
 
@@ -24,8 +27,11 @@ wiki pages should link to them and should not silently diverge from them.
 | [`docs/know-before-you-go.md`](../../docs/know-before-you-go.md) | Participant learning goals and participation choices. |
 | [`docs/hands-on-setup.md`](../../docs/hands-on-setup.md) | Participant setup, safety boundary, preflight, and synthetic workflow. |
 | [`docs/stage-2a-validation-report.md`](../../docs/stage-2a-validation-report.md) | Engineering evidence, limitations, status vocabulary, and validation scope. |
+| [`docs/stage-2a.1-kaapi-consumer-validation.md`](../../docs/stage-2a.1-kaapi-consumer-validation.md) | Exact-commit Kaapi P2.1 consumer evidence, limitations, and closeout result. |
 | [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
+| [`scripts/kaapi_consumer.py`](../../scripts/kaapi_consumer.py) | Minimal workshop-side consumer contract for Kaapi configuration evidence and grading. |
+| [`tests/test_kaapi_consumer.py`](../../tests/test_kaapi_consumer.py) | Consumer-contract tests against the exact Kaapi P2.1 candidate. |
 
 ## Provenance rule
 
