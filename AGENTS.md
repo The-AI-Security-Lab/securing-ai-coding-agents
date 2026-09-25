@@ -83,6 +83,35 @@ Run the deterministic checker first. Then inspect for stale claims,
 contradictions, orphan pages, missing links, and important concepts that have
 no page. Use `needs-review` rather than guessing when evidence is incomplete.
 
+## Engineering workflow and Git provenance
+
+Before engineering work, inspect the current repository/worktree path, branch,
+full `HEAD` SHA, working-tree status, and active worktrees. Every milestone or
+task must name its exact accepted base commit and required ancestor milestone
+SHAs. **Branch name is not provenance. Verify commit ancestry.**
+
+- If required ancestry is missing, stop and report. Do not silently merge,
+  cherry-pick, rebase, reset, or otherwise repair history.
+- Use the explicitly assigned feature branch and worktree. Do not create or
+  switch branches without authorization. Preserve unrelated dirty/untracked
+  files and other worktrees.
+- Before implementation, record the accepted base SHA, required ancestor SHAs,
+  feature branch, worktree, allowed scope, protected/out-of-scope files or
+  areas, required validation, and whether commit/push/merge/rebase/tag actions
+  are authorized.
+- Stay within the assigned milestone. Finishing early does not authorize the
+  next stage.
+- Before completion, run the required validation, review the final diff and
+  status, re-check ancestry, and confirm protected branches and worktrees were
+  not modified.
+- Commit and push only when explicitly authorized. Preserve accepted milestone
+  history; integrate forward rather than rewrite it unless explicitly directed.
+
+For substantial engineering milestones, report the worktree path, branch,
+starting/base SHA, final/commit SHA, required-ancestor verification, changed
+files, validation results, push status, clean/dirty/untracked status, protected
+branches confirmed unchanged, and known limitations or unresolved issues.
+
 ## Safety and provenance
 
 Use synthetic data only in examples and fixtures. Never add credentials,
