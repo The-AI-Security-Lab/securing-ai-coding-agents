@@ -30,3 +30,14 @@ so recent activity can be found with simple text tools.
   independent-verification design.
 - Preserved the four evidence categories and existing status semantics; Lab 1
   and Lab 2 implementation remain deferred.
+
+## [2026-09-25] closeout | Stage 2C Lab 1 implementation
+
+- Recorded the six-fixture Demonstrate → Choose → Practice implementation.
+- Recorded real validation through the public Kaapi API at exact P2.1 commit
+  `9a0bc6ba34576782675aded9e16b718c24fea9bd`.
+- Recorded independent results: risky `FAIL`, hardened `PASS`, and malformed
+  `NOT TESTED` for both Claude Code and Codex.
+- Preserved the boundary that configuration evidence does not establish
+  runtime behavior or an independently verified outcome; Lab 2 remains
+  unimplemented.

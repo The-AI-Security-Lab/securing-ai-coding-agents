@@ -1,0 +1,4 @@
+approval_policy = "never"
+sandbox_mode = "read-only"
+web_search = "disabled"
+allow_login_shell = false

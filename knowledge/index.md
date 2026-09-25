@@ -14,6 +14,8 @@ the workshop's purpose from its readiness model and its evidence boundaries.
   participation paths, and current scope.
 - [Accepted Stage 2B lab design](wiki/stage-2b-lab-design.md) — accepted Lab 1
   experience, Lab 2 verification architecture, and current design boundaries.
+- [Stage 2C Lab 1 implementation](wiki/stage-2c-lab1-implementation.md) — six
+  synthetic fixtures, selected-agent practice flow, and real Kaapi validation.
 
 ## Concepts
 

@@ -1,0 +1,39 @@
+{
+  "schema_version": "1",
+  "required_evidence": [
+    "configured_authority",
+    "resolved_permitted_capabilities"
+  ],
+  "runtimes": {
+    "claude-code": {
+      "control_id": "AGENT-SBOX-001",
+      "policy": {
+        "schema_version": "1",
+        "id": "lab1-claude-sandbox",
+        "runtimes": ["claude-code"],
+        "requirements": [
+          {
+            "control_id": "AGENT-SBOX-001",
+            "expectation": "pass",
+            "parameters": {"require_enabled": true}
+          }
+        ]
+      }
+    },
+    "codex": {
+      "control_id": "AGENT-MCP-001",
+      "policy": {
+        "schema_version": "1",
+        "id": "lab1-codex-no-mcp",
+        "runtimes": ["codex"],
+        "requirements": [
+          {
+            "control_id": "AGENT-MCP-001",
+            "expectation": "pass",
+            "parameters": {"max_configured_servers": 0}
+          }
+        ]
+      }
+    }
+  }
+}

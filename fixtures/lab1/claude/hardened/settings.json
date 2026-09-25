@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "deny": ["Bash", "Edit", "WebFetch", "WebSearch", "mcp__*"]
+  },
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {"denyWrite": ["*"]},
+    "network": {"deniedDomains": ["*"]}
+  },
+  "hooks": {},
+  "mcpServers": {}
+}

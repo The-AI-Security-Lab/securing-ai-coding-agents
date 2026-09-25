@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": ["Bash", "Edit", "WebFetch", "WebSearch"]
+  },
+  "sandbox": {
+    "enabled": false,
+    "allowUnsandboxedCommands": true,
+    "network": {"allowedDomains": ["*"]}
+  },
+  "hooks": {},
+  "mcpServers": {}
+}

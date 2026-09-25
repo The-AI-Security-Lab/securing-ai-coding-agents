@@ -12,8 +12,8 @@ tags: [workshop, stage-2b, labs, evidence]
 
 # Accepted Stage 2B lab design
 
-The Stage 2B Lab Technical Design is accepted. It remains a design artifact;
-Lab 1 and Lab 2 implementation has not started.
+The Stage 2B Lab Technical Design is accepted. The Stage 2C Lab 1
+implementation now exists; Lab 2 implementation has not started.
 
 The workshop keeps one visible workflow:
 
@@ -38,6 +38,9 @@ The three cases ask different questions:
 Kaapi supplies configuration and policy evidence only. A configuration
 `PASS` does not establish runtime enforcement or a security outcome. The same
 organisational requirement may map differently to Claude Code and Codex.
+
+The implemented Lab 1 evidence and exact-commit Kaapi validation are summarized
+in [Stage 2C Lab 1 implementation](stage-2c-lab1-implementation.md).
 
 ## Lab 2
 

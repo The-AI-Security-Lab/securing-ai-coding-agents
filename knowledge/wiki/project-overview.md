@@ -7,6 +7,8 @@ sources:
   - ../../README.md
   - ../../docs/know-before-you-go.md
   - ../../docs/stage-2a.1-kaapi-consumer-validation.md
+  - ../../docs/lab-1-configuration-assessment.md
+  - ../../tests/test_lab1.py
 tags: [workshop, scope, orientation]
 ---
 
@@ -24,15 +26,17 @@ The project has two connected labs:
    golden dataset, run deterministic checks, and preserve inspectable evidence.
 
 The current repository establishes the Stage 2A technical baseline, the
-Stage 2A.1 Kaapi consumer validation, and the accepted Stage 2B lab design.
-It does not publish the complete Lab 1 or Lab 2 fixtures, and it does not claim
-a production security guarantee.
+Stage 2A.1 Kaapi consumer validation, the accepted Stage 2B lab design, and
+the Stage 2C Lab 1 implementation. Lab 2 remains unimplemented, and the
+project does not claim a production security guarantee.
 
 Stage 2A.1 confirmed that the workshop can consume Kaapi P2.1 configuration
 and policy analysis through its public API. It did not establish live agent
 enforcement: runtime behavior and independently verified outcomes remain
-separate workshop evidence. Stage 2B defines the next lab architecture but does
-not implement it.
+separate workshop evidence. Stage 2B defines the lab architecture. Stage 2C
+implements the configuration assessment portion of Lab 1; runtime behavior and
+independently verified outcomes remain separate evidence and are not
+established here.
 
 Participants may choose hands-on Claude Code, hands-on Codex, or an
 instructor-led path. Only one agent is required for hands-on participation.

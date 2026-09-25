@@ -1,0 +1,7 @@
+approval_policy = "never"
+approvals_reviewer = "user"
+sandbox_mode = "danger-full-access"
+web_search = "live"
+
+[mcp_servers.demo]
+command = "KAAPI_SYNTHETIC_DEMO_COMMAND"
