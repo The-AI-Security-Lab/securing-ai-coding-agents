@@ -26,6 +26,13 @@ Define basic security evals and a small golden dataset. Use AI Security Lab's op
 
 Explore [AI Security Lab](https://www.aisecuritylab.com/) for open-source tools, research, learning resources, and future hands-on workshops.
 
+## Project knowledge base
+
+The repository includes a maintained, source-backed [project knowledge base](knowledge/index.md).
+It links the canonical workshop documents into durable pages covering scope,
+readiness semantics, participant pathways, and evidence boundaries. Run
+`python3 scripts/wiki_check.py` after updating it.
+
 *Validated technical setup instructions and lab materials will be published separately. This repository currently contains participant orientation materials only.*
 
 ## Licensing and contributions
