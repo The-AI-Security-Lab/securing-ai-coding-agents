@@ -12,6 +12,16 @@ so recent activity can be found with simple text tools.
 - Added source manifests, cross-linked synthesis pages, and the deterministic
   wiki health check.
 
+## [2026-09-25] update | Stage 2A.1 Kaapi consumer validation
+
+- Recorded consumer validation of Kaapi P2.1 commit
+  `9a0bc6ba34576782675aded9e16b718c24fea9bd` through the public
+  `kaapi.analyze_text(...)` API.
+- Preserved the boundary between configuration evidence, runtime behavior, and
+  independently verified runtime outcomes.
+- Recorded the non-blocking public exception-contract limitation and the fact
+  that Stage 2B has not started.
+
 ## [2026-09-25] closeout | Accepted Stage 2B lab technical design
 
 - Recorded acceptance of `docs/stage-2b-lab-technical-design.md`.

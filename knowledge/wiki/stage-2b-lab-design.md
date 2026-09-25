@@ -4,6 +4,7 @@ status: current
 updated: 2026-09-25
 sources:
   - ../../docs/stage-2b-lab-technical-design.md
+  - ../../docs/stage-2a.1-kaapi-consumer-validation.md
   - ../../docs/stage-2a-validation-report.md
   - ../sources/repository-source-map.md
 tags: [workshop, stage-2b, labs, evidence]
