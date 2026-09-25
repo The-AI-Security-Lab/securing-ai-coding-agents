@@ -8,6 +8,7 @@ sources:
   - ../../docs/know-before-you-go.md
   - ../../docs/hands-on-setup.md
   - ../../docs/stage-2a-validation-report.md
+  - ../../docs/stage-2b-lab-technical-design.md
 tags: [provenance, repository]
 ---
 
@@ -24,6 +25,7 @@ wiki pages should link to them and should not silently diverge from them.
 | [`docs/know-before-you-go.md`](../../docs/know-before-you-go.md) | Participant learning goals and participation choices. |
 | [`docs/hands-on-setup.md`](../../docs/hands-on-setup.md) | Participant setup, safety boundary, preflight, and synthetic workflow. |
 | [`docs/stage-2a-validation-report.md`](../../docs/stage-2a-validation-report.md) | Engineering evidence, limitations, status vocabulary, and validation scope. |
+| [`docs/stage-2b-lab-technical-design.md`](../../docs/stage-2b-lab-technical-design.md) | Accepted design for the Lab 1 experience, Lab 2 verification boundary, scenarios, and implementation deferral. |
 | [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
 

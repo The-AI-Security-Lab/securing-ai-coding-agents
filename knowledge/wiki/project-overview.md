@@ -22,8 +22,8 @@ The project has two connected labs:
 2. **Verify security controls** — define small security evals, exercise a
    golden dataset, run deterministic checks, and preserve inspectable evidence.
 
-The current repository establishes the Stage 2A technical baseline and
-participant orientation. It does not publish the complete Lab 1 or Lab 2
+The current repository establishes the Stage 2A technical baseline and the
+accepted Stage 2B lab design. It does not publish the complete Lab 1 or Lab 2
 fixtures, and it does not claim a production security guarantee.
 
 Participants may choose hands-on Claude Code, hands-on Codex, or an
@@ -35,3 +35,4 @@ instructor-led path. Only one agent is required for hands-on participation.
 - [Know Before You Go](../../docs/know-before-you-go.md)
 - [Participant pathways](participant-pathways.md)
 - [Security verification model](security-verification-model.md)
+- [Accepted Stage 2B lab design](stage-2b-lab-design.md)

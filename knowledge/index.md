@@ -12,6 +12,8 @@ the workshop's purpose from its readiness model and its evidence boundaries.
 
 - [Project overview](wiki/project-overview.md) — workshop purpose, two labs,
   participation paths, and current scope.
+- [Accepted Stage 2B lab design](wiki/stage-2b-lab-design.md) — accepted Lab 1
+  experience, Lab 2 verification architecture, and current design boundaries.
 
 ## Concepts
 

@@ -11,3 +11,12 @@ so recent activity can be found with simple text tools.
   hands-on readiness.
 - Added source manifests, cross-linked synthesis pages, and the deterministic
   wiki health check.
+
+## [2026-09-25] closeout | Accepted Stage 2B lab technical design
+
+- Recorded acceptance of `docs/stage-2b-lab-technical-design.md`.
+- Recorded the Demonstrate → Choose → Practice Lab 1 flow, selected-agent
+  continuity, the six configuration fixtures, and the Lab 2 bounded-scope plus
+  independent-verification design.
+- Preserved the four evidence categories and existing status semantics; Lab 1
+  and Lab 2 implementation remain deferred.
