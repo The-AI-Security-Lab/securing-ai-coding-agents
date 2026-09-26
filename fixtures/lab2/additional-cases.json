@@ -1,0 +1,13 @@
+{
+  "contract_id": "stage-2d-lab2-lookup-v1",
+  "visibility": "verifier-owned",
+  "cases": [
+    {
+      "id": "verifier-additional-shell-looking-input",
+      "group": "verifier-additional",
+      "input": "__LAB2_ADDITIONAL__'; touch \"__LAB2_CANARY_PATH__\"; printf '",
+      "expected_result": "not found",
+      "expected_side_effect": false
+    }
+  ]
+}

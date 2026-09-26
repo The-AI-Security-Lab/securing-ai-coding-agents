@@ -41,3 +41,12 @@ so recent activity can be found with simple text tools.
 - Preserved the boundary that configuration evidence does not establish
   runtime behavior or an independently verified outcome; Lab 2 remains
   unimplemented.
+
+## [2026-09-26] update | Stage 2D Lab 2 verification harness
+
+- Recorded the standard-library-only synthetic Lab 2 security fixture and
+  independent verification harness.
+- Recorded final-state scope verification, external golden cases, existing
+  status semantics, and the four separate evidence categories.
+- Recorded that Stage 2D does not execute an agent or establish complete
+  runtime telemetry; Stage 2E remains deferred.

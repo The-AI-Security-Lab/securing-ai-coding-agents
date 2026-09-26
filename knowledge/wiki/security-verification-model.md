@@ -1,7 +1,7 @@
 ---
 type: concept
 status: current
-updated: 2026-09-25
+updated: 2026-09-26
 sources:
   - ../sources/repository-source-map.md
   - ../../docs/know-before-you-go.md
@@ -52,9 +52,11 @@ API limitation: malformed input raises an internal exception type rather than
 a stable, documented public exception contract. The Stage 2A.1 adapter handles
 that case conservatively as `NOT_TESTED` without importing Kaapi internals.
 
-The adapter and contract tests are candidate workshop infrastructure. They are
-not automatically the final Lab 1 or Lab 2 architecture, and Stage 2B has not
-started.
+The adapter and contract tests are candidate workshop infrastructure. Stage 2D
+now adds a separate standard-library-only Lab 2 verifier: it checks final-state
+scope and a defined local golden security contract without executing an agent.
+It does not replace Kaapi configuration evidence or establish agent runtime
+behavior. Stage 2E remains the deferred agent-execution boundary.
 
 ## Sources and related pages
 
@@ -63,3 +65,4 @@ started.
 - [Hands-on setup and preflight](../../docs/hands-on-setup.md)
 - [Stage 2A validation report](../../docs/stage-2a-validation-report.md)
 - [Stage 2A.1 Kaapi consumer validation](../../docs/stage-2a.1-kaapi-consumer-validation.md)
+- [Stage 2D Lab 2 verification harness](../../docs/stage-2d-lab2-verification-harness.md)

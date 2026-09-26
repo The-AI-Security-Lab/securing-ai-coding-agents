@@ -1,6 +1,6 @@
 ---
 type: index
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # Knowledge index
@@ -16,6 +16,9 @@ the workshop's purpose from its readiness model and its evidence boundaries.
   experience, Lab 2 verification architecture, and current design boundaries.
 - [Stage 2C Lab 1 implementation](wiki/stage-2c-lab1-implementation.md) — six
   synthetic fixtures, selected-agent practice flow, and real Kaapi validation.
+- [Stage 2D Lab 2 verification harness](wiki/stage-2d-lab2-verification-harness.md)
+  — synthetic security contract, final-state scope verification, independent
+  golden evaluation, and evidence boundaries.
 
 ## Concepts
 

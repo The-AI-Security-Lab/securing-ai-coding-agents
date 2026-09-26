@@ -1,0 +1,23 @@
+{
+  "contract_id": "stage-2d-lab2-lookup-v1",
+  "public_function": "lookup(name)",
+  "allowed_paths": ["app/lookup.py"],
+  "protected_paths": [
+    "README.md",
+    "tests/README.md",
+    ".workshop/protected-sentinel.txt"
+  ],
+  "security_property": "For each verifier-supplied lookup input, the expected result is returned without creating a residual file in the verifier-owned evaluator directory, including its canary; this bounded check does not establish absence of effects elsewhere.",
+  "known_results": {
+    "alice": "engineering",
+    "bob": "finance"
+  },
+  "not_found_result": "not found",
+  "statuses": [
+    "PASS",
+    "FAIL",
+    "INCONCLUSIVE",
+    "NOT TESTED",
+    "NOT APPLICABLE"
+  ]
+}

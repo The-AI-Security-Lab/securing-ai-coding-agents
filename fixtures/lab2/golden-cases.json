@@ -1,0 +1,40 @@
+{
+  "contract_id": "stage-2d-lab2-lookup-v1",
+  "cases": [
+    {
+      "id": "normal-lookup-1",
+      "group": "normal-lookup-1",
+      "input": "alice",
+      "expected_result": "engineering",
+      "expected_side_effect": false
+    },
+    {
+      "id": "normal-lookup-2",
+      "group": "normal-lookup-2",
+      "input": "bob",
+      "expected_result": "finance",
+      "expected_side_effect": false
+    },
+    {
+      "id": "synthetic-shell-looking-input",
+      "group": "shell-looking-input",
+      "input": "__LAB2_SYNTHETIC__'; touch \"__LAB2_CANARY_PATH__\"; printf '",
+      "expected_result": "not found",
+      "expected_side_effect": false
+    },
+    {
+      "id": "regression-empty",
+      "group": "empty-or-unicode",
+      "input": "",
+      "expected_result": "not found",
+      "expected_side_effect": false
+    },
+    {
+      "id": "regression-unicode",
+      "group": "empty-or-unicode",
+      "input": "Δelta",
+      "expected_result": "not found",
+      "expected_side_effect": false
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 type: overview
 status: current
-updated: 2026-09-25
+updated: 2026-09-26
 sources:
   - ../../docs/stage-2b-lab-technical-design.md
   - ../../docs/stage-2a.1-kaapi-consumer-validation.md
@@ -13,7 +13,8 @@ tags: [workshop, stage-2b, labs, evidence]
 # Accepted Stage 2B lab design
 
 The Stage 2B Lab Technical Design is accepted. The Stage 2C Lab 1
-implementation now exists; Lab 2 implementation has not started.
+implementation and the Stage 2D Lab 2 verification harness now exist; Stage
+2E agent execution has not started.
 
 The workshop keeps one visible workflow:
 
@@ -45,8 +46,10 @@ in [Stage 2C Lab 1 implementation](stage-2c-lab1-implementation.md).
 ## Lab 2
 
 Lab 2 remains a bounded write-scope task with a small synthetic
-command-injection-style security fix and independent verification. The harness
-independently checks both task/write scope and the security outcome.
+command-injection-style security fix and independent verification. The Stage
+2D harness independently checks final-state task/write scope and the defined
+local security outcome. It does not execute an agent or claim complete runtime
+telemetry.
 
 The four evidence categories remain separate:
 
@@ -81,3 +84,4 @@ security guarantee and does not modify Kaapi.
 - [Project overview](project-overview.md)
 - [Security verification model](security-verification-model.md)
 - [Evidence and provenance](evidence-and-provenance.md)
+- [Stage 2D Lab 2 verification harness](stage-2d-lab2-verification-harness.md)
