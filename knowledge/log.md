@@ -50,3 +50,36 @@ so recent activity can be found with simple text tools.
   status semantics, and the four separate evidence categories.
 - Recorded that Stage 2D does not execute an agent or establish complete
   runtime telemetry; Stage 2E remains deferred.
+
+## [2026-09-27] design | Stage 2E live coding-agent workflow
+
+- Added the canonical design for wrapping the accepted Stage 2D verifier with
+  one selected live coding-agent pathway and explicit prepare → launch → exit
+  → record → verify → report → decide sequencing.
+- Preserved the distinction between execution metadata, observed runtime
+  behavior, and independently verified outcome evidence.
+- Recorded provisional, version-scoped Claude Code and Codex boundary
+  observations, including the Codex security-pass/scope-fail `__pycache__`
+  example, without weakening the Stage 2D allowlist.
+- Added the Stage 2E wiki synthesis and source-map navigation; implementation,
+  participant commands, and verifier changes remain deferred.
+
+## [2026-09-27] correction | Stage 2E live coding-agent workflow design
+
+- Clarified that Stage 2E validates manual Claude Code and Codex participant
+  launch procedures while automated/programmatic launch adapters remain
+  deferred.
+- Bounded the tested Codex non-disclosure claim as a workflow property rather
+  than enforced read confidentiality.
+- Removed AppSec evidence arbitration from Stage 2E and split unresolved items
+  into acceptance blockers versus documented limitations/future research.
+- Added explicit Claude/Codex normal-path and preserved Codex bytecode-failure
+  acceptance cases without changing the Stage 2D allowlist.
+
+## [2026-09-27] correction | Stage 2E runtime-observability requirement
+
+- Removed independent runtime-observability evidence from the Stage 2E
+  acceptance blockers.
+- Classified richer independent evidence beyond bounded manual observations as
+  documented future research; participant observations and agent output remain
+  non-comprehensive evidence.

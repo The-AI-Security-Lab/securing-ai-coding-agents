@@ -25,6 +25,8 @@ sources:
   - ../../fixtures/lab2/repo/.workshop/protected-sentinel.txt
   - ../../scripts/lab2_harness.py
   - ../../tests/test_lab2_harness.py
+  - ../../docs/stage-2e-live-agent-workflow-design.md
+  - ../../knowledge/sources/stage-2e-live-agent-experiments.md
 tags: [provenance, repository]
 ---
 
@@ -54,6 +56,8 @@ wiki pages should link to them and should not silently diverge from them.
 | [`fixtures/lab2/repo/README.md`](../../fixtures/lab2/repo/README.md) | Synthetic Lab 2 application and protected workspace context copied by `prepare`. |
 | [`scripts/lab2_harness.py`](../../scripts/lab2_harness.py) | Standard-library-only prepare, record, verify, and report implementation for Stage 2D. |
 | [`tests/test_lab2_harness.py`](../../tests/test_lab2_harness.py) | Stage 2D deterministic and adversarial verifier tests. |
+| [`docs/stage-2e-live-agent-workflow-design.md`](../../docs/stage-2e-live-agent-workflow-design.md) | Stage 2E live-agent lifecycle, trust boundary, evidence semantics, participant pathways, and deferred implementation design. |
+| [`knowledge/sources/stage-2e-live-agent-experiments.md`](stage-2e-live-agent-experiments.md) | Provisional manually supplied live observations for exact Claude Code and Codex versions/profiles, including the Codex scope-failure example. |
 | [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
 | [`scripts/kaapi_consumer.py`](../../scripts/kaapi_consumer.py) | Minimal workshop-side consumer contract for Kaapi configuration evidence and grading. |

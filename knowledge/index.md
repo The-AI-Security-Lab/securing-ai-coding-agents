@@ -19,6 +19,9 @@ the workshop's purpose from its readiness model and its evidence boundaries.
 - [Stage 2D Lab 2 verification harness](wiki/stage-2d-lab2-verification-harness.md)
   — synthetic security contract, final-state scope verification, independent
   golden evaluation, and evidence boundaries.
+- [Stage 2E live coding-agent workflow](wiki/stage-2e-live-agent-workflow.md)
+  — design for one selected live agent pathway around the Stage 2D verifier,
+  bounded experiments, lifecycle sequencing, and unresolved questions.
 
 ## Concepts
 
@@ -40,6 +43,9 @@ the workshop's purpose from its readiness model and its evidence boundaries.
   documents and the concepts they support.
 - [External source map](sources/external-source-map.md) — vendor and project
   links recorded by the validation work.
+- [Stage 2E live-agent experiment record](sources/stage-2e-live-agent-experiments.md)
+  — provisional, manually supplied Claude Code and Codex boundary and
+  remediation observations.
 
 ## Maintenance
 
