@@ -20,7 +20,10 @@ Explore Claude Code and Codex architecture, security-relevant configurations, pe
 
 ### Lab 2 — Verify security controls
 
-Define basic security evals and a small golden dataset. Use AI Security Lab's open-source tools and a deterministic Python harness to assess supported agent configurations, collect evidence, and distinguish configured restrictions from verified outcomes.
+Run the [live coding-agent workflow](docs/lab-2-live-agent-workflow.md) with
+one selected agent or the instructor-led fallback. Use the deterministic
+Stage 2D verifier to assess the synthetic security contract and final-state
+scope independently of the agent's claim.
 
 ## Continue learning
 

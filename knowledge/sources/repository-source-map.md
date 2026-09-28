@@ -1,7 +1,7 @@
 ---
 type: source-manifest
 status: current
-updated: 2026-09-26
+updated: 2026-09-28
 sources:
   - ../../README.md
   - ../../CONTRIBUTING.md
@@ -26,7 +26,12 @@ sources:
   - ../../scripts/lab2_harness.py
   - ../../tests/test_lab2_harness.py
   - ../../docs/stage-2e-live-agent-workflow-design.md
+  - ../../docs/lab-2-live-agent-workflow.md
+  - ../../scripts/stage2e_workflow.py
+  - ../../tests/test_stage2e_workflow.py
   - ../../knowledge/sources/stage-2e-live-agent-experiments.md
+  - ../../knowledge/sources/stage-2e-claude-2.1.283-acceptance.md
+  - ../../knowledge/sources/stage-2e-codex-0.151.0-acceptance.md
 tags: [provenance, repository]
 ---
 
@@ -56,8 +61,13 @@ wiki pages should link to them and should not silently diverge from them.
 | [`fixtures/lab2/repo/README.md`](../../fixtures/lab2/repo/README.md) | Synthetic Lab 2 application and protected workspace context copied by `prepare`. |
 | [`scripts/lab2_harness.py`](../../scripts/lab2_harness.py) | Standard-library-only prepare, record, verify, and report implementation for Stage 2D. |
 | [`tests/test_lab2_harness.py`](../../tests/test_lab2_harness.py) | Stage 2D deterministic and adversarial verifier tests. |
-| [`docs/stage-2e-live-agent-workflow-design.md`](../../docs/stage-2e-live-agent-workflow-design.md) | Stage 2E live-agent lifecycle, trust boundary, evidence semantics, participant pathways, and deferred implementation design. |
+| [`docs/stage-2e-live-agent-workflow-design.md`](../../docs/stage-2e-live-agent-workflow-design.md) | Stage 2E live-agent lifecycle, trust boundary, evidence semantics, participant pathways, manual-validation gates, and deferred automation. |
+| [`docs/lab-2-live-agent-workflow.md`](../../docs/lab-2-live-agent-workflow.md) | Participant-facing Stage 2E workflow, stop/checkpoint, pathway procedures, fallback, and evidence interpretation. |
+| [`scripts/stage2e_workflow.py`](../../scripts/stage2e_workflow.py) | Standard-library-only Stage 2E preparation, bounded metadata, lifecycle gate, contextual report, and manual pathway plan generation. |
+| [`tests/test_stage2e_workflow.py`](../../tests/test_stage2e_workflow.py) | Deterministic Stage 2E wrapper, lifecycle, metadata, report, hygiene, fallback, and conservative-failure tests. |
 | [`knowledge/sources/stage-2e-live-agent-experiments.md`](stage-2e-live-agent-experiments.md) | Provisional manually supplied live observations for exact Claude Code and Codex versions/profiles, including the Codex scope-failure example. |
+| [`knowledge/sources/stage-2e-claude-2.1.283-acceptance.md`](stage-2e-claude-2.1.283-acceptance.md) | Protected Claude Code 2.1.283 acceptance result, strong local runtime-bookkeeping classification evidence, and strict scope-review interpretation. |
+| [`knowledge/sources/stage-2e-codex-0.151.0-acceptance.md`](stage-2e-codex-0.151.0-acceptance.md) | Protected Codex 0.151.0 successful acceptance, exact generated boundary, bytecode hygiene, agent claim, and independent result. |
 | [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
 | [`scripts/kaapi_consumer.py`](../../scripts/kaapi_consumer.py) | Minimal workshop-side consumer contract for Kaapi configuration evidence and grading. |

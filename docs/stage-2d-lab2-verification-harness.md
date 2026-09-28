@@ -7,8 +7,8 @@ design. It does not execute Claude Code or Codex. The workshop story remains:
 
 The Lab 2 question is: “The agent says it fixed the security problem. How do
 we know?” Stage 2D answers only the verification part. Agent execution,
-approval observation, and participant-facing execution remain deferred to
-Stage 2E.
+approval observation, and participant-facing execution are provided by the
+separate Stage 2E workflow wrapper.
 
 ## Synthetic application contract
 
@@ -127,8 +127,9 @@ dependencies. Tests cover hardened and vulnerable behavior, normal regressions,
 scope tampering, symlinks, path traversal, protected modes, missing/corrupt
 verification material, evaluator timeout and malformed output, environment
 and canary manipulation, visible-case special-casing, candidate-output
-forgery, evidence preservation, and deterministic repetition. Stage 2E will
-later own agent execution and live observation.
+forgery, evidence preservation, and deterministic repetition. Stage 2E owns
+the manual agent workflow and bounded lifecycle metadata around this verifier;
+it does not turn those records into verification evidence.
 
 The remaining limitations are explicit: temporary writes subsequently removed,
 arbitrary effects outside the bounded observation, detached processes, complete
@@ -141,4 +142,5 @@ workspace, and the finite deterministic case set are not established.
 - [Stage 2C Lab 1 implementation](../knowledge/wiki/stage-2c-lab1-implementation.md)
 - [Stage 2D verifier](../scripts/lab2_harness.py)
 - [Stage 2D verifier tests](../tests/test_lab2_harness.py)
+- [Stage 2E live-agent workflow](lab-2-live-agent-workflow.md)
 - [Evidence and provenance](../knowledge/wiki/evidence-and-provenance.md)

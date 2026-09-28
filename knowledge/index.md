@@ -1,6 +1,6 @@
 ---
 type: index
-updated: 2026-09-26
+updated: 2026-09-28
 ---
 
 # Knowledge index
@@ -20,8 +20,9 @@ the workshop's purpose from its readiness model and its evidence boundaries.
   — synthetic security contract, final-state scope verification, independent
   golden evaluation, and evidence boundaries.
 - [Stage 2E live coding-agent workflow](wiki/stage-2e-live-agent-workflow.md)
-  — design for one selected live agent pathway around the Stage 2D verifier,
-  bounded experiments, lifecycle sequencing, and unresolved questions.
+  — manual one-selected-agent workflow around the Stage 2D verifier,
+  metadata/evidence boundaries, participant procedures, fallback, and
+  version-specific live acceptance.
 
 ## Concepts
 
@@ -46,6 +47,12 @@ the workshop's purpose from its readiness model and its evidence boundaries.
 - [Stage 2E live-agent experiment record](sources/stage-2e-live-agent-experiments.md)
   — provisional, manually supplied Claude Code and Codex boundary and
   remediation observations.
+- [Claude Code 2.1.283 acceptance evidence](sources/stage-2e-claude-2.1.283-acceptance.md)
+  — protected live acceptance result, runtime-bookkeeping investigation, and
+  scope-review evidence.
+- [Codex 0.151.0 acceptance evidence](sources/stage-2e-codex-0.151.0-acceptance.md)
+  — protected successful live acceptance, generated isolated-home boundary,
+  bytecode hygiene, and independent security/scope evidence.
 
 ## Maintenance
 

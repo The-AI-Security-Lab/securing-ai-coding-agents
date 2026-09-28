@@ -83,3 +83,42 @@ so recent activity can be found with simple text tools.
 - Classified richer independent evidence beyond bounded manual observations as
   documented future research; participant observations and agent output remain
   non-comprehensive evidence.
+
+## [2026-09-27] implementation | Stage 2E live coding-agent workflow
+
+- Added a standard-library-only Stage 2E wrapper that prepares one selected
+  pathway, generates secret-free participant plans, records bounded lifecycle
+  metadata, blocks verification until the reported invocation exit, and emits
+  a context-aware report around the unchanged Stage 2D verifier.
+- Added the participant Lab 2 guide, Claude Code and Codex candidate
+  procedures, explicit sensitive-output and authentication-cleanup warnings,
+  and an instructor-led fallback marked as not hands-on success.
+- Added deterministic tests for metadata authority, lifecycle gating,
+  independent security/scope results, `__pycache__` scope failure, report
+  context, conservative invalid metadata handling, redaction, and fallback
+  semantics. Exact live acceptance for Claude and Codex remains open.
+
+## [2026-09-28] acceptance | Stage 2E unexpected-change evidence
+
+- Recorded the protected Claude Code 2.1.283 live acceptance: security `PASS`,
+  scope `FAIL`, overall `FAIL`, with `.claude/` and empty `.claude/.cc-writes/`
+  detected outside the declared `app/lookup.py` path.
+- Recorded the read-only local-runtime investigation classifying the paths as
+  strongly supported Claude runtime bookkeeping without changing the strict
+  Stage 2D scope result or adding an allowlist.
+- Added the bounded Detect → Explain → Classify → Decide → Fix / Explicitly
+  Allow review lifecycle, preserved security/scope independence, and
+  contextualized nested Stage 2D wording for Stage 2E reports.
+
+## [2026-09-28] acceptance | Codex 0.151.0 successful live acceptance
+
+- Recorded the generated Codex pathway using its isolated `CODEX_HOME`, copied
+  strict configuration, `workspace-write`, approval policy `never`, disabled
+  web search, and bytecode-hygiene environment.
+- Preserved the agent claim separately from the independent Stage 2D result:
+  all six security cases passed, scope passed, overall passed, and only
+  `app/lookup.py` changed in the verified final state.
+- Retained the earlier Codex bytecode scope failure and Claude runtime-
+  bookkeeping scope failure without adding a runtime-artifact allowlist.
+- Scoped acceptance to Codex `0.151.0`, retained the outside-read
+  confidentiality limitation, and required versioned revalidation.
