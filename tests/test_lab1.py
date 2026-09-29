@@ -21,6 +21,7 @@ from scripts.lab1 import (
     participant_result,
     fixture_path,
     selected_cases,
+    _human_result,
 )
 
 
@@ -116,6 +117,13 @@ class Lab1Tests(unittest.TestCase):
         first = participant_result("codex", "hardened", analyzer=self.analyzer)
         second = participant_result("codex", "hardened", analyzer=self.analyzer)
         self.assertEqual(first, second)
+
+    def test_participant_result_shows_exact_fixture_and_teaching_follows_inspection(self) -> None:
+        result = participant_result("codex", "risky", analyzer=self.analyzer)
+        rendered = _human_result(result)
+        self.assertIn("fixtures/lab1/codex/risky/config.toml", rendered)
+        self.assertIn("Configuration exceeds the declared security baseline", rendered)
+        self.assertIn("Inspect the file, then compare", result["teaching_question"])
 
     @unittest.skipUnless(
         KAAPI_P21_SOURCE,

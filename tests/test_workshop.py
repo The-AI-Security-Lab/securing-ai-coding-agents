@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -239,6 +240,80 @@ class WorkshopDependencyTests(unittest.TestCase):
             self.assertTrue((sibling / "keep.txt").is_file())
             self.assertTrue((external / "keep.txt").is_file())
         self.assertEqual(status.state, "REMOVED")
+
+    def test_lab2_wrapper_remembers_active_run_and_automatic_codex_setup(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-wrapper-run"
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                prepared = workshop.prepare_lab2("codex")
+                state = json.loads(
+                    (repository / ".workshop-state" / "active-lab2.json").read_text()
+                )
+            codex_home = Path(prepared["participant_plan"]["codex_home"])
+            self.assertEqual(Path(state["run_dir"]), run_path.resolve())
+            self.assertEqual(
+                (codex_home / "config.toml").read_text(),
+                prepared["participant_plan"]["configuration_text"],
+            )
+            self.assertTrue(codex_home.is_dir())
+            shutil.rmtree(run_path)
+            shutil.rmtree(codex_home)
+
+    def test_cleanup_dry_run_and_verbose_are_non_destructive_then_cleanup_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-cleanup-run"
+            normal_codex = Path(run_temp) / "normal-codex"
+            normal_claude = Path(run_temp) / "normal-claude"
+            normal_codex.mkdir()
+            normal_claude.mkdir()
+            (normal_codex / "auth.json").write_text("preserve", encoding="utf-8")
+            (normal_claude / "session.json").write_text("preserve", encoding="utf-8")
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                prepared = workshop.prepare_lab2("codex")
+                codex_home = Path(prepared["participant_plan"]["codex_home"])
+                code, dry_run = workshop.cleanup_workshop(dry_run=True, verbose=True)
+                self.assertEqual(code, 0)
+                self.assertIn("would be removed", dry_run)
+                self.assertTrue(run_path.is_dir())
+                self.assertTrue(codex_home.is_dir())
+                code, output = workshop.cleanup_workshop(verbose=True)
+                self.assertEqual(code, 0)
+                self.assertIn("WORKSHOP CLEANUP: COMPLETE", output)
+                self.assertFalse(run_path.exists())
+                self.assertFalse(codex_home.exists())
+                self.assertTrue((normal_codex / "auth.json").exists())
+                self.assertTrue((normal_claude / "session.json").exists())
+                code, repeated = workshop.cleanup_workshop()
+                self.assertEqual(code, 0)
+                self.assertIn("already absent", repeated)
+
+    def test_cleanup_refuses_symlinked_known_lab2_run_without_touching_target(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-symlink-run"
+            outside = Path(run_temp) / "outside"
+            outside.mkdir()
+            keep = outside / "keep.txt"
+            keep.write_text("keep", encoding="utf-8")
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ):
+                prepared = workshop.prepare_lab2("claude")
+                state_path = repository / ".workshop-state" / "active-lab2.json"
+                run_path.rename(run_path.with_name("real-run"))
+                run_path.symlink_to(run_path.with_name("real-run"), target_is_directory=True)
+                code, output = workshop.cleanup_workshop(verbose=True)
+            self.assertEqual(code, 1)
+            self.assertIn("not removed", output)
+            self.assertTrue(keep.exists())
+            self.assertTrue(state_path.exists())
+            shutil.rmtree(run_path.with_name("real-run"))
 
 
 if __name__ == "__main__":

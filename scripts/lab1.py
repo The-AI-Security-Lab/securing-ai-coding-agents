@@ -52,9 +52,9 @@ FIXTURE_FILES = {
     "codex": "config.toml",
 }
 TEACHING_QUESTIONS = {
-    "risky": "Can you identify the concerning authority/capability before seeing the assessment?",
-    "hardened": "Does the candidate now meet the declared configuration baseline?",
-    "malformed": "What should we conclude when the evidence cannot be safely assessed?",
+    "risky": "Inspect the file, then compare its authority and capabilities with the assessment.",
+    "hardened": "Inspect the file, then compare it with the declared security baseline.",
+    "malformed": "Inspect the file, then decide whether it can be safely assessed.",
 }
 
 
@@ -119,6 +119,18 @@ def _display_status(grade: str) -> str:
     return "NOT TESTED" if grade == NOT_TESTED else grade
 
 
+def _result_reason(grade: str) -> str:
+    if grade == PASS:
+        return "Configuration meets the declared security baseline."
+    if grade == FAIL:
+        return "Configuration exceeds the declared security baseline."
+    if grade == NOT_TESTED:
+        return "Configuration could not be safely assessed."
+    if grade == INCONCLUSIVE:
+        return "Available configuration evidence was insufficient for a conclusion."
+    return "No configuration assessment conclusion is available."
+
+
 def participant_result(
     agent: str,
     case: str,
@@ -180,22 +192,15 @@ def assess_selected_agent(
 
 
 def _human_result(result: dict[str, Any]) -> str:
-    presence = result["evidence_presence"]
+    status = result["configuration_baseline"]
+    symbol = {PASS: "✓", FAIL: "✗", NOT_TESTED: "○", INCONCLUSIVE: "○"}.get(
+        status, "○"
+    )
     lines = [
-        f"{result['case'].title()} — {result['runtime']}",
-        f"Teaching question: {result['teaching_question']}",
-        f"Configuration meets baseline: {result['configuration_baseline']}",
-        f"Kaapi posture: {result['kaapi_posture']}",
-        f"Policy status: {result['policy_status']}",
-        f"Stayed within task scope: {result['within_task_scope']}",
-        f"Independently verified security outcome: {result['independently_verified_security_outcome']}",
-        "Evidence: "
-        + "; ".join(f"{name}={presence[name]}" for name in sorted(presence)),
-        f"Conclusion: {result['conclusion']}",
+        f"{symbol} {result['case'].upper()} — {status}",
+        f"  File: {result['fixture']}",
+        f"  Reason: {_result_reason(status)}",
     ]
-    limitations = result["formal_result"]["limitations"]
-    if limitations:
-        lines.append("Evidence note: " + " ".join(limitations))
     return "\n".join(lines)
 
 
@@ -203,13 +208,33 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agent", choices=sorted(RUNTIMES), required=True)
     parser.add_argument("--case", choices=CASES)
-    parser.add_argument("--format", choices=("human", "json"), default="human")
+    parser.add_argument(
+        "--format", choices=("human", "evidence", "json"), default="human"
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="include detailed configuration evidence after the participant summary",
+    )
     args = parser.parse_args()
     results = assess_selected_agent(args.agent, args.case)
-    if args.format == "json":
+    if args.format in {"json", "evidence"}:
         print(json.dumps(results, indent=2, sort_keys=True))
     else:
+        print("Lab 1 — Configuration Assessment")
         print("\n\n".join(_human_result(result) for result in results))
+        statuses = " | ".join(
+            f"{result['case'].title()} {result['configuration_baseline']}"
+            for result in results
+        )
+        print("\n" + statuses)
+        print(
+            "\nPASS means the configuration meets the declared baseline. "
+            "It is NOT proof of runtime behaviour."
+        )
+        if args.verbose:
+            print("\nDetailed configuration evidence")
+            print(json.dumps(results, indent=2, sort_keys=True))
     return 0
 
 

@@ -437,6 +437,51 @@ class PreflightTests(unittest.TestCase):
             check = preflight.prepare_synthetic_workspace(repo, repo / "scratch")
             self.assertEqual(check.status, preflight.FAIL)
 
+    def test_default_rendering_is_concise_but_preserves_manual_open_checks(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_repo(root)
+            result = preflight.build_result(
+                agent="codex",
+                acquisition="zip",
+                kaapi_mode="skip",
+                kaapi_project=None,
+                synthetic_action="none",
+                synthetic_dir=None,
+                repo_root=root,
+                runner=self.runner(),
+                locator=self.locator("codex"),
+            )
+            rendered = preflight.render_text(result)
+            self.assertIn("Workshop Preflight — Codex", rendered)
+            self.assertIn("✓ Python", rendered)
+            self.assertIn("✓ Codex installed", rendered)
+            self.assertIn("○ Authentication — checked when you use the agent", rendered)
+            self.assertIn("○ Agent action — during Lab 2", rendered)
+            self.assertIn("AUTOMATED CHECKS: PASS", rendered)
+            self.assertIn("You're ready to continue to Lab 1.", rendered)
+            self.assertNotIn("Readiness: UNRESOLVED_MANUAL_EVIDENCE", rendered)
+
+    def test_verbose_rendering_retains_detailed_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.make_repo(root)
+            result = preflight.build_result(
+                agent="codex",
+                acquisition="zip",
+                kaapi_mode="skip",
+                kaapi_project=None,
+                synthetic_action="none",
+                synthetic_dir=None,
+                repo_root=root,
+                runner=self.runner(),
+                locator=self.locator("codex"),
+            )
+            rendered = preflight.render_text(result, verbose=True)
+            self.assertIn("Workshop local preflight (detailed evidence)", rendered)
+            self.assertIn("command/action:", rendered)
+            self.assertIn("Readiness: UNRESOLVED_MANUAL_EVIDENCE", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

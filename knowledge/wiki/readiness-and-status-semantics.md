@@ -1,7 +1,7 @@
 ---
 type: concept
 status: current
-updated: 2026-09-25
+updated: 2026-09-29
 sources:
   - ../sources/repository-source-map.md
   - ../../docs/hands-on-setup.md
@@ -31,7 +31,10 @@ The status vocabulary is equally explicit:
 Therefore, exit code `0` is not an overall workshop pass. Without reviewed
 manual evidence, the preflight keeps hands-on readiness unresolved. The
 instructor-led path is supported participation but is explicitly not
-hands-on readiness.
+hands-on readiness. The default participant rendering intentionally translates
+these checks into a short environment/agent/lab checklist; detailed check
+records remain available with `--verbose` or JSON and the underlying semantics
+are unchanged.
 
 ## Sources and related pages
 

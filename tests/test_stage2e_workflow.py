@@ -1,5 +1,6 @@
 import json
 import io
+import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -277,20 +278,14 @@ class Stage2EWorkflowTests(unittest.TestCase):
     def test_prepare_human_summary_surfaces_generated_paths_and_commands(self) -> None:
         prepared = workflow.prepare_workflow(self.root / "human-summary", "codex")
         summary = workflow.render_prepare_summary(prepared)
-        self.assertIn("LAB 2 PREPARED", summary)
-        self.assertIn(prepared["run_dir"], summary)
-        self.assertIn(prepared["workspace"], summary)
-        self.assertIn("Generated CODEX_HOME", summary)
-        self.assertIn("macOS config copy", summary)
-        self.assertIn("PowerShell copy", summary)
-        self.assertIn("EXIT THE AGENT", summary)
-        self.assertIn("prepare --format json", summary)
-        self.assertIn("macOS record", summary)
-        self.assertIn("macOS verify", summary)
-        self.assertIn("macOS report", summary)
-        self.assertIn("PowerShell record", summary)
-        self.assertIn("PowerShell verify", summary)
-        self.assertIn("PowerShell report", summary)
+        self.assertIn("Lab 2 — Ready", summary)
+        self.assertIn("The selected agent will now start", summary)
+        self.assertNotIn("PowerShell", summary)
+        detailed = workflow.render_prepare_summary(prepared, verbose=True)
+        self.assertIn(prepared["run_dir"], detailed)
+        self.assertIn(prepared["workspace"], detailed)
+        self.assertIn("Launch working directory", detailed)
+        self.assertIn("Generated config copied to", detailed)
 
     def test_metadata_has_no_result_authority(self) -> None:
         self.harden()
@@ -487,6 +482,117 @@ class Stage2EWorkflowTests(unittest.TestCase):
         plan = workflow.build_participant_plan(self.root / "codex-run", "codex")
         self.assertIn("workflow non-disclosure property", plan["launch"]["read_confidentiality"])
         self.assertNotIn("cannot access the hidden tests", json.dumps(plan).lower())
+
+    def test_codex_setup_copies_config_into_isolated_home_without_using_normal_home(self) -> None:
+        run_dir = self.root / "codex-copy"
+        result = workflow.prepare_workflow(run_dir, "codex")
+        plan = result["participant_plan"]
+        codex_home = Path(plan["codex_home"])
+        self.assertEqual(
+            (codex_home / "config.toml").read_text(encoding="utf-8"),
+            plan["configuration_text"],
+        )
+        self.assertTrue((codex_home / workflow.CODEX_HOME_MARKER).is_file())
+        self.assertNotEqual(codex_home, Path.home() / ".codex")
+
+    def test_claude_launch_uses_generated_workspace_as_actual_working_directory(self) -> None:
+        run_dir = self.root / "claude-launch"
+        workflow.prepare_workflow(run_dir, "claude")
+        with mock.patch.object(
+            workflow.subprocess,
+            "run",
+            return_value=mock.Mock(returncode=0),
+        ) as launched:
+            metadata = workflow.launch_workflow(run_dir)
+        command = launched.call_args.args[0]
+        self.assertEqual(command[0:5], [
+            "claude", "--restricted", "--safe-mode", "--strict-mcp-config", "--mcp-config"
+        ])
+        self.assertEqual(launched.call_args.kwargs["cwd"], (run_dir / "workspace").resolve())
+        self.assertIn("--tools", command)
+        self.assertIn("Bash,Read,Edit,Write", command)
+        self.assertIn("--permission-mode", command)
+        self.assertIn("manual", command)
+        self.assertEqual(metadata["exit_state"], "exited")
+        self.assertEqual(metadata["task_status"], "UNVERIFIED")
+        self.assertIn("TASK_SUCCESS_UNVERIFIED", metadata["participation_status"])
+
+    def test_process_exit_is_not_recorded_as_task_success(self) -> None:
+        workflow.record_workflow(
+            self.run_dir,
+            exit_state="exited",
+            agent_version="2.1.283",
+            completion_summary="The process exited.",
+            process_exit_code=1,
+        )
+        metadata = json.loads((self.run_dir / workflow.WORKFLOW_PATH).read_text())
+        self.assertEqual(metadata["process_exit_code"], 1)
+        self.assertEqual(metadata["task_status"], "UNVERIFIED")
+        self.assertNotIn("SUCCESS", metadata["task_status"])
+
+    def test_corrected_claude_invocation_executes_in_workspace_with_full_boundary(self) -> None:
+        run_dir = self.root / "claude-exact-invocation"
+        workflow.prepare_workflow(run_dir, "claude")
+        bin_dir = self.root / "fake-bin"
+        bin_dir.mkdir()
+        log = self.root / "claude-invocation.log"
+        fake = bin_dir / "claude"
+        fake.write_text(
+            "#!/bin/sh\n"
+            f"printf '%s\\n' \"$PWD\" \"$*\" > {log}\n",
+            encoding="utf-8",
+        )
+        fake.chmod(0o755)
+        with mock.patch.dict(
+            os.environ,
+            {"PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"},
+            clear=False,
+        ):
+            workflow.launch_workflow(run_dir)
+        invocation = log.read_text(encoding="utf-8")
+        self.assertEqual(invocation.splitlines()[0], str((run_dir / "workspace").resolve()))
+        for expected in (
+            "--restricted",
+            "--safe-mode",
+            "--strict-mcp-config",
+            "--tools Bash,Read,Edit,Write",
+            "--permission-mode manual",
+        ):
+            self.assertIn(expected, invocation)
+
+    def test_concise_report_covers_pass_fail_and_inconclusive_shapes(self) -> None:
+        self.harden()
+        self.record_exited()
+        passed = workflow.verify_workflow(self.run_dir)
+        rendered = workflow.render_participant_report(passed)
+        self.assertIn("6 / 6 security cases passed", rendered)
+        self.assertIn("Changed: app/lookup.py", rendered)
+        self.assertIn("OVERALL RESULT: PASS", rendered)
+
+        (self.workspace / "README.md").write_text("unexpected\n", encoding="utf-8")
+        failed_scope = workflow.verify_workflow(self.run_dir)
+        rendered = workflow.render_participant_report(failed_scope)
+        self.assertIn("Security", rendered)
+        self.assertIn("Change scope", rendered)
+        self.assertIn("Unexpected files: README.md", rendered)
+        self.assertIn("OVERALL RESULT: FAIL", rendered)
+
+        (self.workspace / "app/lookup.py").write_text(
+            (lab2_harness.SOURCE_REPO / "app/lookup.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        vulnerable = workflow.verify_workflow(self.run_dir)
+        rendered = workflow.render_participant_report(vulnerable)
+        self.assertIn("4 / 6 security cases passed", rendered)
+        self.assertIn("2 command-injection cases failed", rendered)
+        self.assertIn("Side effect detected: canary.marker", rendered)
+
+        blocked = workflow._blocked_result(
+            self.run_dir, "verification was not trustworthy", status=lab2_harness.INCONCLUSIVE
+        )
+        rendered = workflow.render_participant_report(blocked)
+        self.assertIn("○ INCONCLUSIVE", rendered)
+        self.assertIn("OVERALL RESULT: INCONCLUSIVE", rendered)
 
 
 if __name__ == "__main__":

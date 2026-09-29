@@ -3,6 +3,21 @@
 Entries are append-only. Use the format `## [YYYY-MM-DD] operation | subject`
 so recent activity can be found with simple text tools.
 
+## [2026-09-29] implementation | Participant UX remediation pass
+
+- Added concise participant-facing preflight and Lab 1 assessment output while
+  retaining verbose and machine-readable evidence.
+- Added the `workshop.py lab2` wrapper path with remembered active state,
+  automatic isolated Codex configuration setup, workspace-correct Claude
+  launch settings, internal record/verify/report ordering, and concise
+  independent verification output.
+- Extended cleanup with exact ownership/provenance checks, dry-run and verbose
+  reporting, idempotence, symlink defenses, and preservation of normal agent
+  configuration/authentication state.
+- Rewrote the canonical Participant Guide and aligned Lab 1, Lab 2, setup, and
+  front-door documentation. Deferred optional custom configuration assessment
+  and the agent-guided companion.
+
 ## [2026-09-25] ingest | Existing workshop documentation
 
 - Created the initial project wiki from `README.md`, `CONTRIBUTING.md`, and

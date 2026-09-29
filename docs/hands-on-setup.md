@@ -2,7 +2,10 @@
 
 This guide establishes the minimum participant environment, one selected
 coding-agent pathway, and a safe synthetic check. Continue with the
-[Participant Lab Guide](participant-guide.md) for Lab 1 and Lab 2.
+[Participant Lab Guide](participant-guide.md) for the canonical Lab 1 and
+Lab 2 journey. The participant-facing Lab 2 wrapper owns temporary run state,
+agent setup, lifecycle bookkeeping, verification, and cleanup; participants do
+not need to operate lower-level workflow modules or copy generated paths.
 
 Choose exactly one pathway:
 

@@ -37,6 +37,8 @@ sources:
   - ../../knowledge/sources/kaapi-public-acquisition-validation.md
   - ../../scripts/workshop.py
   - ../../tests/test_workshop.py
+  - ../../tests/test_preflight.py
+  - ../../tests/test_participant_docs.py
 tags: [provenance, repository]
 ---
 
@@ -76,9 +78,9 @@ wiki pages should link to them and should not silently diverge from them.
 | [`knowledge/sources/stage-2e-codex-0.151.0-acceptance.md`](stage-2e-codex-0.151.0-acceptance.md) | Protected Codex 0.151.0 successful acceptance, exact generated boundary, bytecode hygiene, agent claim, and independent result. |
 | [`knowledge/sources/participant-self-service-rehearsal.md`](participant-self-service-rehearsal.md) | Sanitized deterministic self-service rehearsal, participant-output coverage, dependency finding, and explicit non-live limitations. |
 | [`knowledge/sources/kaapi-public-acquisition-validation.md`](kaapi-public-acquisition-validation.md) | Credential-disabled public exact-commit acquisition, locked environment, and fresh Codex Lab 1 results. |
-| [`scripts/workshop.py`](../../scripts/workshop.py) | Pinned workshop-managed Kaapi acquisition, validation, and Lab 1 launcher. |
-| [`tests/test_workshop.py`](../../tests/test_workshop.py) | Fail-closed managed-dependency and platform-path tests. |
-| [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
+| [`scripts/workshop.py`](../../scripts/workshop.py) | Pinned Kaapi setup, participant-facing Lab 1/Lab 2 wrapper, active-run state, and provenance-verified cleanup. |
+| [`tests/test_workshop.py`](../../tests/test_workshop.py) | Fail-closed managed-dependency, participant-state, launch, cleanup, and platform-path tests. |
+| [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for concise participant checks, detailed evidence, and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
 | [`scripts/kaapi_consumer.py`](../../scripts/kaapi_consumer.py) | Minimal workshop-side consumer contract for Kaapi configuration evidence and grading. |
 | [`tests/test_kaapi_consumer.py`](../../tests/test_kaapi_consumer.py) | Consumer-contract tests against the exact Kaapi P2.1 candidate. |

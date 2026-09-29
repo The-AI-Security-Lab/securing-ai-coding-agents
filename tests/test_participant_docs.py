@@ -24,11 +24,12 @@ class ParticipantDocumentationTests(unittest.TestCase):
         ):
             self.assertIn(expected, self.readme)
         self.assertNotIn("materials will be published", self.readme.lower())
-        self.assertIn("participant-guide.md#h-troubleshooting", self.readme)
-        self.assertIn("participant-guide.md#i-safe-cleanup", self.readme)
+        self.assertIn("participant-guide.md#7-troubleshooting-and-recovery", self.readme)
 
     def test_guide_preserves_required_evidence_and_scope_semantics(self) -> None:
         for expected in (
+            "configured authority",
+            "resolved permitted capabilities",
             "configured authority",
             "resolved permitted capabilities",
             "observed runtime behavior",
@@ -53,10 +54,10 @@ class ParticipantDocumentationTests(unittest.TestCase):
             "scripts/preflight.py",
             "scripts/workshop.py setup",
             "scripts/workshop.py lab1",
-            "scripts/stage2e_workflow.py prepare",
-            "scripts/stage2e_workflow.py verify",
-            "scripts/stage2e_workflow.py report",
-            "--format human",
+            "scripts/workshop.py lab2 --agent codex",
+            "scripts/workshop.py lab2 verify",
+            "scripts/workshop.py cleanup",
+            "--dry-run --verbose",
         ):
             self.assertIn(expected, self.guide)
         self.assertNotIn("whitelist `.claude`", self.guide)

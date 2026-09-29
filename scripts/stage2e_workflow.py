@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
+import subprocess
 import tempfile
 import uuid
 from pathlib import Path
@@ -34,6 +36,7 @@ WORKFLOW_CONTEXT = "stage2e"
 WORKFLOW_PATH = "workflow.json"
 STAGE2E_RESULT_PATH = "stage2e-verification.json"
 PARTICIPANT_DIR = "participant"
+CODEX_HOME_MARKER = "workshop-codex-home.json"
 
 PATHWAYS = ("claude", "codex", "instructor-led")
 LIVE_PATHWAYS = frozenset(("claude", "codex"))
@@ -77,8 +80,8 @@ At completion, state:
 2. what file you changed; and
 3. why you believe the issue is resolved.
 
-Do not claim that independent verification has passed. The independent Stage
-2D verifier will run only after you finish and exit.
+Do not claim that independent verification has passed. The independent
+verifier will run only after you finish and exit.
 """
 
 SENSITIVE_PATTERNS = (
@@ -256,6 +259,7 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
                 "mcp_configuration": mcp,
                 "launch": {
                     "command": list(claude_command),
+                    "cwd": str(workspace),
                     "shell": "PYTHONDONTWRITEBYTECODE=1 "
                     + " ".join(shlex.quote(part) for part in claude_command),
                     "powershell": (
@@ -299,6 +303,7 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
                 "configuration_text": config_text,
                 "launch": {
                     "command": list(codex_command),
+                    "cwd": str(workspace),
                     "shell": (
                         f"CODEX_HOME={shlex.quote(str(codex_home))} "
                         "PYTHONDONTWRITEBYTECODE=1 "
@@ -348,8 +353,22 @@ def _write_participant_files(run_dir: Path, plan: dict[str, Any]) -> None:
         _write_json(participant_dir / "claude-settings.json", plan["configuration"])
         _write_json(participant_dir / "claude-mcp.json", plan["mcp_configuration"])
     elif plan["pathway"] == "codex":
-        Path(plan["codex_home"]).mkdir(parents=True, exist_ok=False)
+        codex_home = Path(plan["codex_home"])
+        codex_home.mkdir(parents=True, exist_ok=False)
+        _write_json(
+            codex_home / CODEX_HOME_MARKER,
+            {
+                "schema_version": 1,
+                "context": "participant-self-service",
+                "repository": str(ROOT.resolve()),
+                "run_dir": str(run_dir.resolve()),
+                "purpose": "isolated workshop Codex configuration",
+            },
+        )
         (participant_dir / "codex-config.toml").write_text(
+            plan["configuration_text"], encoding="utf-8"
+        )
+        (codex_home / "config.toml").write_text(
             plan["configuration_text"], encoding="utf-8"
         )
 
@@ -391,79 +410,40 @@ def prepare_workflow(run_dir: Path, pathway: str) -> dict[str, Any]:
     return {**prepared, "workflow": metadata, "participant_plan": plan}
 
 
-def render_prepare_summary(result: dict[str, Any]) -> str:
-    """Render the generated participant paths and commands without hiding JSON."""
+def render_prepare_summary(result: dict[str, Any], *, verbose: bool = False) -> str:
+    """Render one platform-aware participant action, with details on request."""
 
     plan = result["participant_plan"]
     launch = plan["launch"]
     lines = [
-        "LAB 2 PREPARED",
+        "Lab 2 — Ready",
         "",
-        f"Pathway:       {plan['agent']} {plan.get('tested_version') or ''}".rstrip(),
-        f"Run directory: {result['run_dir']}",
-        f"Workspace:     {result['workspace']}",
-        f"Task file:     {plan['task_file']}",
-        "",
-        "Use the command for your shell:",
+        f"Selected agent: {plan['agent']} {plan.get('tested_version') or ''}".rstrip(),
+        "The isolated workshop setup is complete.",
+        "The selected agent will now start in the generated Lab 2 workspace.",
     ]
-    if "configuration_copy" in launch:
+    if verbose:
         lines.extend(
             [
-                f"Generated CODEX_HOME: {plan['codex_home']}",
-                f"macOS config copy:   {launch['configuration_copy']}",
-                f"PowerShell copy:     {launch['configuration_copy_powershell']}",
                 "",
+                f"Workspace: {result['workspace']}",
+                f"Launch working directory: {launch.get('cwd', result['workspace'])}",
+                f"Launch command: {' '.join(shlex.quote(part) for part in launch.get('command', ())) or '<instructor-led>'}",
             ]
         )
-    if "shell" in launch:
-        lines.append(f"macOS launch:     {launch['shell']}")
-    if "powershell" in launch:
-        lines.append(f"PowerShell launch: {launch['powershell']}")
-    if "instruction" in launch:
-        lines.append(launch["instruction"])
-    run_dir = result["run_dir"]
-    tested_version = plan.get("tested_version") or "<version>"
-    lines.extend(
-        [
-            "",
-            "After the agent exits, run from the workshop repository:",
-            (
-                "macOS record:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
-                "scripts/stage2e_workflow.py record "
-                f"--run-dir {shlex.quote(run_dir)} --agent-version {shlex.quote(tested_version)}"
-            ),
-            (
-                "macOS verify:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
-                f"scripts/stage2e_workflow.py verify --run-dir {shlex.quote(run_dir)}"
-            ),
-            (
-                "macOS report:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
-                f"scripts/stage2e_workflow.py report --run-dir {shlex.quote(run_dir)}"
-            ),
-            (
-                "PowerShell record: python -B scripts/stage2e_workflow.py record "
-                f"--run-dir {_powershell_quote(run_dir)} --agent-version "
-                f"{_powershell_quote(tested_version)}"
-            ),
-            (
-                "PowerShell verify: python -B scripts/stage2e_workflow.py verify "
-                f"--run-dir {_powershell_quote(run_dir)}"
-            ),
-            (
-                "PowerShell report: python -B scripts/stage2e_workflow.py report "
-                f"--run-dir {_powershell_quote(run_dir)}"
-            ),
-        ]
-    )
-    lines.extend(
-        [
-            "",
-            "Next: read the task, launch only the selected pathway, finish the task,",
-            "EXIT THE AGENT, then record and independently verify from the workshop repository.",
-            "Preparation and workflow markers are not runtime telemetry or security evidence.",
-            "Detailed generated evidence remains available with prepare --format json.",
-        ]
-    )
+        if "codex_home" in plan:
+            lines.extend(
+                [
+                    f"Isolated Codex home: {plan['codex_home']}",
+                    f"Generated config copied to: {Path(plan['codex_home']) / 'config.toml'}",
+                ]
+            )
+        lines.extend(
+            [
+                f"Internal run directory: {result['run_dir']}",
+                "Detailed workflow evidence is retained in the run directory.",
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -499,6 +479,7 @@ def record_workflow(
     completion_summary: str = "",
     observations: list[str] | None = None,
     auth_status: str = "not-recorded",
+    process_exit_code: int | None = None,
 ) -> dict[str, Any]:
     """Record bounded workflow metadata; never calculate a result."""
 
@@ -541,13 +522,15 @@ def record_workflow(
             "observations": clean_observations,
             "invocation_active": exit_state in {"active", "unknown", "not-started"},
             "detached_process_absence": "NOT ESTABLISHED",
+            "task_status": "UNVERIFIED",
+            "process_exit_code": process_exit_code,
         }
     )
     if pathway == "instructor-led":
         metadata["participation_status"] = "INSTRUCTOR_LED_NOT_HANDS_ON"
     else:
         metadata["participation_status"] = (
-            "LIVE_AGENT_COMPLETION_REPORTED; INDEPENDENT_VERIFICATION_PENDING"
+            "LIVE_AGENT_EXIT_REPORTED; TASK_SUCCESS_UNVERIFIED; INDEPENDENT_VERIFICATION_PENDING"
         )
     _write_json(run_dir / WORKFLOW_PATH, metadata)
 
@@ -559,6 +542,44 @@ def record_workflow(
         observations=clean_observations,
     )
     return metadata
+
+
+def launch_workflow(run_dir: Path) -> dict[str, Any]:
+    """Launch the selected agent in the prepared workspace and record lifecycle only."""
+
+    run_dir = _run_dir(run_dir)
+    metadata = _load_workflow(run_dir)
+    pathway = metadata["pathway"]
+    if pathway not in LIVE_PATHWAYS:
+        raise ValueError("only a selected live coding agent can be launched")
+    plan = build_participant_plan(run_dir, pathway)
+    launch = plan["launch"]
+    environment = os.environ.copy()
+    environment.update(launch.get("environment", {}))
+    command = list(launch["command"])
+    cwd = Path(launch.get("cwd", run_dir / "workspace"))
+    try:
+        completed = subprocess.run(command, cwd=cwd, env=environment, check=False)
+    except OSError as exc:
+        record_workflow(
+            run_dir,
+            exit_state="unavailable",
+            agent_version=plan.get("tested_version"),
+            completion_summary="The selected agent could not be started; task success was not established.",
+            observations=[f"agent launch failed: {exc.__class__.__name__}"],
+            auth_status="unavailable",
+        )
+        return _load_workflow(run_dir)
+    record_workflow(
+        run_dir,
+        exit_state="exited",
+        agent_version=plan.get("tested_version"),
+        completion_summary="The agent process exited; task success was not established.",
+        observations=["The participant exited the selected agent before independent verification."],
+        auth_status="not-recorded",
+        process_exit_code=completed.returncode,
+    )
+    return _load_workflow(run_dir)
 
 
 def _stage2e_evidence(security_status: str) -> dict[str, dict[str, str]]:
@@ -845,6 +866,114 @@ def report_workflow(run_dir: Path) -> str:
         lines.append(f"  {name:<38} {category['presence']} ({category['status']})")
     lines.extend(["", "What can we conclude?", result["conclusion"], "", "What can we NOT conclude?"])
     lines.extend(f"{item}" for item in result["limitations"])
+    return "\n".join(lines)
+
+
+def _status_symbol(status: str) -> str:
+    return {lab2_harness.PASS: "✓", lab2_harness.FAIL: "✗"}.get(status, "○")
+
+
+def render_participant_report(result: dict[str, Any]) -> str:
+    """Render concise Lab 2 outcomes while retaining all evidence on disk."""
+
+    security = result.get("security", {})
+    scope = result.get("scope", {})
+    security_status = security.get("status", lab2_harness.INCONCLUSIVE)
+    scope_status = scope.get("status", lab2_harness.INCONCLUSIVE)
+    cases = security.get("cases", [])
+    passed = sum(case.get("status") == lab2_harness.PASS for case in cases)
+    changed = sorted(
+        set(scope.get("changed_paths", []))
+        | set(scope.get("created_paths", []))
+        | set(scope.get("deleted_paths", []))
+        | set(scope.get("symlink_paths", []))
+    )
+    unexpected = sorted(
+        set(scope.get("unauthorized_paths", []))
+        | set(scope.get("symlink_paths", []))
+        | set(scope.get("created_paths", []))
+        - set(lab2_harness.ALLOWED_PATHS)
+    )
+    side_effects = sorted(
+        {
+            path
+            for case in cases
+            for path in case.get("side_effect_paths", [])
+        }
+    )
+    lines = [
+        "Lab 2 — Independent Verification",
+        "",
+        "Security",
+        f"{_status_symbol(security_status)} {security_status}",
+        (
+            f"  {passed} / {len(cases)} security cases passed"
+            if cases
+            else "  Security cases were not run"
+        ),
+    ]
+    if security_status == lab2_harness.FAIL:
+        failures = [case for case in cases if case.get("status") == lab2_harness.FAIL]
+        groups: dict[str, int] = {}
+        for case in failures:
+            group = str(case.get("group") or case.get("id") or "security")
+            case_id = str(case.get("id") or "")
+            if (
+                "shell" in group.lower()
+                or "command" in group.lower()
+                or "shell" in case_id.lower()
+            ):
+                group = "command-injection"
+            groups[group] = groups.get(group, 0) + 1
+        if groups:
+            detail = ", ".join(
+                f"{count} {group} case{'s' if count != 1 else ''} failed"
+                for group, count in sorted(groups.items())
+            )
+            lines.append(f"  Failed: {detail}")
+        if side_effects:
+            lines.append(f"  Side effect detected: {', '.join(side_effects)}")
+    elif security_status not in {lab2_harness.PASS}:
+        lines.append(f"  Reason: {security.get('reason', 'security evidence is inconclusive')}")
+    lines.extend(
+        [
+            "",
+            "Change scope",
+            f"{_status_symbol(scope_status)} {scope_status}",
+        ]
+    )
+    if scope_status in {lab2_harness.PASS, lab2_harness.FAIL}:
+        lines.extend(
+            [
+                (
+                    f"  Changed: {', '.join(changed)}"
+                    if changed
+                    else "  No files changed"
+                ),
+                f"  Unexpected files: {', '.join(unexpected) if unexpected else 'None'}",
+                f"  Protected file changed: {'Yes' if scope.get('protected_sentinel_changed') else 'No'}",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "  Final-state changes: Not determined",
+                "  Unexpected files: Not determined",
+                "  Protected file changed: Not determined",
+            ]
+        )
+    if scope_status not in {lab2_harness.PASS, lab2_harness.FAIL}:
+        lines.append(f"  Reason: {scope.get('reason', 'scope evidence is inconclusive')}")
+    overall = result.get("overall", lab2_harness.INCONCLUSIVE)
+    lines.extend(
+        [
+            "",
+            f"OVERALL RESULT: {overall}",
+            "",
+            result.get("conclusion", "Independent verification did not produce a complete conclusion."),
+            "This verifies the defined security property and final filesystem state. It is not complete runtime telemetry.",
+        ]
+    )
     return "\n".join(lines)
 
 

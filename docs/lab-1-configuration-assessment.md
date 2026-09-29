@@ -1,84 +1,70 @@
-# Lab 1 — Govern an AI coding agent with configuration analysis
+# Lab 1 — Configuration Assessment
 
-For the complete self-service sequence, execution context, troubleshooting,
-and cleanup, start with the [Participant Lab Guide](participant-guide.md).
+Start with the [Participant Lab Guide](participant-guide.md). This page gives
+the Lab 1 detail for participants and instructors.
 
-Lab 1 teaches participants to inspect an agent configuration and decide what
-the declared policy evidence supports. It does not claim that a setting was
-enforced at runtime. The participant workflow is **Demonstrate → Choose →
-Practice**:
+## What you are doing
 
-1. The instructor demonstrates the three fixture states for the other vendor
-   where practical, choosing the demonstration path based on the predominant
-   participant path.
-2. Each participant chooses Claude Code or Codex and remains on that path.
-3. Each participant practices with the three fixtures for the selected path.
+You are deciding whether a supplied synthetic configuration meets the declared
+security baseline. Kaapi assesses configured authority and resolved permitted
+capabilities. It does not establish observed runtime behavior or independently
+verified runtime outcomes.
 
-All six synthetic fixtures remain available. A participant with both agents,
-or with time to compare configuration models, may optionally run the other
-vendor's three fixtures. Running both vendors is not a workshop prerequisite.
-Participants stay on their selected path for Lab 2.
+## Inspect, then assess
 
-| Agent path | Risky | Hardened | Malformed |
-| --- | --- | --- | --- |
-| Claude Code | [`fixtures/lab1/claude/risky/settings.json`](../fixtures/lab1/claude/risky/settings.json) | [`fixtures/lab1/claude/hardened/settings.json`](../fixtures/lab1/claude/hardened/settings.json) | [`fixtures/lab1/claude/malformed/settings.json`](../fixtures/lab1/claude/malformed/settings.json) |
-| Codex | [`fixtures/lab1/codex/risky/config.toml`](../fixtures/lab1/codex/risky/config.toml) | [`fixtures/lab1/codex/hardened/config.toml`](../fixtures/lab1/codex/hardened/config.toml) | [`fixtures/lab1/codex/malformed/config.toml`](../fixtures/lab1/codex/malformed/config.toml) |
+Inspect the three files for the one agent path you selected:
 
-The three cases have distinct teaching questions:
+| State | Claude Code | Codex |
+| --- | --- | --- |
+| Risky | [`fixtures/lab1/claude/risky/settings.json`](../fixtures/lab1/claude/risky/settings.json) | [`fixtures/lab1/codex/risky/config.toml`](../fixtures/lab1/codex/risky/config.toml) |
+| Hardened | [`fixtures/lab1/claude/hardened/settings.json`](../fixtures/lab1/claude/hardened/settings.json) | [`fixtures/lab1/codex/hardened/config.toml`](../fixtures/lab1/codex/hardened/config.toml) |
+| Malformed | [`fixtures/lab1/claude/malformed/settings.json`](../fixtures/lab1/claude/malformed/settings.json) | [`fixtures/lab1/codex/malformed/config.toml`](../fixtures/lab1/codex/malformed/config.toml) |
 
-- **Risky:** Can the participant identify the concerning authority/capability before seeing the assessment?
-- **Hardened:** Does the candidate now meet the declared configuration baseline?
-- **Malformed:** What should we conclude when the evidence cannot be safely assessed?
-
-The runner consumes each fixture through the accepted public Kaapi consumer
-adapter and uses Kaapi for configuration/policy evidence only:
+After inspection, run from the repository root:
 
 ```sh
-python3 scripts/workshop.py lab1 --agent claude
 python3 scripts/workshop.py lab1 --agent codex
 ```
 
-First run `python3 scripts/workshop.py setup` (`python` in PowerShell) from the
-workshop root. Setup anonymously obtains the public Kaapi source pinned to
-`9a0bc6ba34576782675aded9e16b718c24fea9bd`, prepares its locked environment,
-and validates Kaapi `1.1.0`. It does not use a global Kaapi installation.
+Use `--agent claude` for Claude Code, or `python` instead of `python3` in
+PowerShell. The command assesses all three fixtures for the selected agent.
 
-The fixtures are synthetic and are not copied into a participant's real
-configuration. The examples correspond to the relevant configuration models:
-Claude Code uses JSON settings, while Codex uses TOML configuration. A common
-organisational security requirement can therefore map to different vendor
-configuration controls and evidence.
+## Expected participant result
 
-The declared Lab 1 baseline is intentionally narrower than the full inspection:
+```text
+Lab 1 — Configuration Assessment
 
-- Claude Code's decision is gated by `AGENT-SBOX-001`: sandbox enablement must
-  be present.
-- Codex's decision is gated by `AGENT-MCP-001`: the configured MCP server count
-  must be zero.
+✗ RISKY — FAIL
+  File: fixtures/lab1/codex/risky/config.toml
+  Reason: Configuration exceeds the declared security baseline.
 
-The other visible settings provide useful authority and capability context for
-the participant's inspection, but they are not separate pass/fail requirements
-in this Lab 1 policy.
+✓ HARDENED — PASS
+  File: fixtures/lab1/codex/hardened/config.toml
+  Reason: Configuration meets the declared security baseline.
 
-For orientation only, the corresponding real configuration locations are
-Claude Code's user `~/.claude/settings.json`, shared project
-`.claude/settings.json`, project-local `.claude/settings.local.json`, and
-managed settings; and Codex's user `~/.codex/config.toml`, trusted project
-`.codex/config.toml`, and possible managed/system layers. Lab 1 does not read
-or modify any of those locations.
+○ MALFORMED — NOT TESTED
+  File: fixtures/lab1/codex/malformed/config.toml
+  Reason: Configuration could not be safely assessed.
+```
 
-The participant-facing result is deliberately simple:
+`PASS` means the configuration meets the declared baseline. It is not proof of
+runtime behavior. `FAIL` means the declared baseline was not met. `NOT TESTED`
+means the configuration could not be safely assessed. `INCONCLUSIVE` means the
+evidence is insufficient for a supported conclusion.
 
-- `PASS`, `FAIL`, `INCONCLUSIVE`, or `NOT TESTED` for the configuration baseline;
-- `NOT APPLICABLE` for Lab 1's task-scope and independently verified outcome rows;
-- which of the four formal evidence categories are present or missing; and
-- a plain-English conclusion and limitation.
+Detailed evidence remains available with:
 
-The four evidence categories remain separate: configured authority, resolved
-permitted capabilities, observed runtime behaviour, and independently verified
-runtime outcome. Lab 1 supplies only the first two. `PASS` therefore means that
-the declared configuration requirement passed; it is not proof of runtime
-enforcement or of a security outcome. The bridge question is: “Kaapi says the
-configuration passes. Are we done?” No. Lab 2 remains responsible for bounded
-write scope, the small synthetic command-injection-style security fix, and
-independent verification of both task/write scope and security outcome.
+```sh
+python3 scripts/lab1.py --agent codex --format evidence
+```
+
+An optional custom configuration assessment is deferred from this bounded pass.
+Real configuration files may expose internal paths, URLs, MCP names, or other
+sensitive material; the supplied model-free synthetic fixtures remain the safe
+participant path.
+
+## Sources and related pages
+
+- [Participant Lab Guide](participant-guide.md)
+- [Kaapi consumer](../scripts/kaapi_consumer.py)
+- [Lab 1 policy](../fixtures/lab1/policy.json)

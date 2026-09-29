@@ -603,9 +603,103 @@ def result_as_dict(result: PreflightResult) -> dict[str, object]:
     }
 
 
-def render_text(result: PreflightResult) -> str:
+def _symbol(status: str) -> str:
+    return {
+        PASS: "✓",
+        FAIL: "✗",
+        NOT_TESTED: "○",
+        INCONCLUSIVE: "○",
+        NOT_APPLICABLE: "○",
+    }.get(status, "○")
+
+
+def _check(result: PreflightResult, name: str) -> Check:
+    return next(check for check in result.checks if check.name == name)
+
+
+def _render_participant_text(result: PreflightResult) -> str:
+    selected = "Instructor-led" if result.selected_agent == "none" else result.selected_agent.title()
+    python = _check(result, "Python runtime")
+    git = next(
+        (check for check in result.checks if check.name == "Git executable"),
+        None,
+    )
+    files = _check(result, "Participant files")
+    agent_name = (
+        "Claude Code" if result.selected_agent == "claude" else "Codex"
+    )
+    agent = next(
+        (
+            check
+            for check in result.checks
+            if check.name == f"Selected agent executable ({agent_name})"
+        ),
+        None,
+    )
+    auth = next(
+        (
+            check
+            for check in result.checks
+            if check.name == f"{agent_name} authentication/provider access"
+        ),
+        None,
+    )
+    kaapi = _check(result, "Workshop Kaapi readiness")
+    action = next(
+        (
+            check
+            for check in result.checks
+            if check.name in {"Synthetic agent action", "Synthetic agent action provenance"}
+        ),
+        None,
+    )
+    approval = next(
+        (check for check in result.checks if check.name == "Manual approval review"),
+        None,
+    )
+
+    def line(label: str, check: Check | None) -> str:
+        if check is None:
+            return f"  ○ {label} — not applicable"
+        detail = ""
+        if check.status == FAIL:
+            detail = f" — {check.observed}"
+        return f"  {_symbol(check.status)} {label}{detail}"
+
     lines = [
-        "Workshop local preflight",
+        f"Workshop Preflight — {selected}",
+        "",
+        "Environment",
+        line("Python", python),
+        line("Git", git),
+        line("Workshop files", files),
+        "",
+        "Coding agent",
+        line(f"{agent_name} installed", agent),
+        line("Authentication — checked when you use the agent", auth),
+        "",
+        "Lab dependencies",
+        line("Kaapi ready", kaapi),
+        "",
+        "Live checks",
+        line("Agent action — during Lab 2", action),
+        line("Approval behaviour — during Lab 2", approval),
+        "",
+        f"AUTOMATED CHECKS: {'PASS' if not result.required_failures else 'FAIL'}",
+    ]
+    if result.required_failures:
+        lines.append("Fix the failed check above, then run preflight again.")
+    else:
+        lines.append("You're ready to continue to Lab 1.")
+    lines.append("○ = Not tested yet; expected for checks performed during Lab 2.")
+    return "\n".join(lines)
+
+
+def render_text(result: PreflightResult, *, verbose: bool = False) -> str:
+    if not verbose:
+        return _render_participant_text(result)
+    lines = [
+        "Workshop local preflight (detailed evidence)",
         f"Selected agent: {result.selected_agent}",
         f"Acquisition: {result.acquisition}",
         f"Kaapi probe: {result.kaapi_probe}",
@@ -671,6 +765,11 @@ def parse_args() -> argparse.Namespace:
         help="path outside the workshop checkout for --synthetic prepare/verify",
     )
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="show detailed check commands, observations, and limitations",
+    )
     return parser.parse_args()
 
 
@@ -691,7 +790,7 @@ def main() -> int:
     if args.format == "json":
         print(json.dumps(result_as_dict(result), indent=2, sort_keys=True))
     else:
-        print(render_text(result))
+        print(render_text(result, verbose=args.verbose))
     return result.exit_code
 
 
