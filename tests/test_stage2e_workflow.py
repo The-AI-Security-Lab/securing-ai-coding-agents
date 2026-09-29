@@ -267,6 +267,30 @@ class Stage2EWorkflowTests(unittest.TestCase):
         self.assertNotIn("read confidentiality is enforced", serialized)
         self.assertNotIn("__pycache__", lab2_harness.ALLOWED_PATHS)
         self.assertNotIn(".claude", lab2_harness.ALLOWED_PATHS)
+        self.assertIn("$env:CODEX_HOME", plan["launch"]["powershell"])
+        self.assertIn("$env:PYTHONDONTWRITEBYTECODE", plan["launch"]["powershell"])
+        self.assertIn("Copy-Item -LiteralPath", plan["launch"]["configuration_copy_powershell"])
+        self.assertIn("--strict-config", plan["launch"]["powershell"])
+        self.assertIn("workspace-write", plan["launch"]["powershell"])
+        self.assertIn("never", plan["launch"]["powershell"])
+
+    def test_prepare_human_summary_surfaces_generated_paths_and_commands(self) -> None:
+        prepared = workflow.prepare_workflow(self.root / "human-summary", "codex")
+        summary = workflow.render_prepare_summary(prepared)
+        self.assertIn("LAB 2 PREPARED", summary)
+        self.assertIn(prepared["run_dir"], summary)
+        self.assertIn(prepared["workspace"], summary)
+        self.assertIn("Generated CODEX_HOME", summary)
+        self.assertIn("macOS config copy", summary)
+        self.assertIn("PowerShell copy", summary)
+        self.assertIn("EXIT THE AGENT", summary)
+        self.assertIn("prepare --format json", summary)
+        self.assertIn("macOS record", summary)
+        self.assertIn("macOS verify", summary)
+        self.assertIn("macOS report", summary)
+        self.assertIn("PowerShell record", summary)
+        self.assertIn("PowerShell verify", summary)
+        self.assertIn("PowerShell report", summary)
 
     def test_metadata_has_no_result_authority(self) -> None:
         self.harden()
@@ -406,14 +430,58 @@ class Stage2EWorkflowTests(unittest.TestCase):
         self.record_exited()
         workflow.verify_workflow(self.run_dir)
         report = workflow.report_workflow(self.run_dir)
-        self.assertLess(report.index("Verified security outcome"), report.index("Scope result"))
-        self.assertLess(report.index("Scope result"), report.index("Overall result"))
+        self.assertLess(report.index("Security outcome"), report.index("Change scope"))
+        self.assertLess(report.index("Change scope"), report.index("Overall"))
+        self.assertIn("6/6 independent cases passed", report)
+        self.assertIn("Unexpected: none", report)
+        self.assertIn("Final-state verification != complete runtime telemetry", report)
         self.assertIn("metadata", report.lower())
         self.assertIn("Unexpected-change review", report)
         self.assertIn("DETECT -> EXPLAIN -> CLASSIFY -> DECIDE -> FIX / EXPLICITLY ALLOW", report)
         self.assertIn("Stage 2D itself did not execute the coding agent", report)
         standalone = lab2_harness.report(self.run_dir)
         self.assertIn("Stage 2D executes no coding agent", standalone)
+
+    def test_report_prominently_surfaces_unexpected_scope_paths(self) -> None:
+        self.harden()
+        (self.workspace / "unexpected.txt").write_text("synthetic\n", encoding="utf-8")
+        self.record_exited()
+        workflow.verify_workflow(self.run_dir)
+        report = workflow.report_workflow(self.run_dir)
+        self.assertIn("Security outcome\n  PASS", report)
+        self.assertIn("Change scope\n  FAIL", report)
+        self.assertIn("Overall\n  FAIL", report)
+        self.assertIn("Unexpected: unexpected.txt", report)
+
+    def test_report_preserves_security_failure_with_scope_pass(self) -> None:
+        self.record_exited()
+        workflow.verify_workflow(self.run_dir)
+        report = workflow.report_workflow(self.run_dir)
+        self.assertIn("Security outcome\n  FAIL", report)
+        self.assertIn("Change scope\n  PASS", report)
+        self.assertIn("Overall\n  FAIL", report)
+
+    def test_report_preserves_security_and_scope_failure(self) -> None:
+        (self.workspace / "unexpected.txt").write_text("synthetic\n", encoding="utf-8")
+        self.record_exited()
+        workflow.verify_workflow(self.run_dir)
+        report = workflow.report_workflow(self.run_dir)
+        self.assertIn("Security outcome\n  FAIL", report)
+        self.assertIn("Change scope\n  FAIL", report)
+        self.assertIn("Overall\n  FAIL", report)
+        self.assertIn("Unexpected: unexpected.txt", report)
+
+    def test_blocked_report_preserves_inconclusive_without_promoting_it(self) -> None:
+        path = self.run_dir / workflow.WORKFLOW_PATH
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+        metadata["end_marker"] = None
+        metadata["exit_state"] = "exited"
+        path.write_text(json.dumps(metadata), encoding="utf-8")
+        workflow.verify_workflow(self.run_dir)
+        report = workflow.report_workflow(self.run_dir)
+        self.assertIn("Security outcome\n  INCONCLUSIVE", report)
+        self.assertIn("Change scope\n  INCONCLUSIVE", report)
+        self.assertNotIn("Overall\n  PASS", report)
 
     def test_codex_plan_describes_workflow_not_read_confidentiality(self) -> None:
         plan = workflow.build_participant_plan(self.root / "codex-run", "codex")

@@ -1,4 +1,7 @@
-# Lab 1 — Configuration assessment
+# Lab 1 — Govern an AI coding agent with configuration analysis
+
+For the complete self-service sequence, execution context, troubleshooting,
+and cleanup, start with the [Participant Lab Guide](participant-guide.md).
 
 Lab 1 teaches participants to inspect an agent configuration and decide what
 the declared policy evidence supports. It does not claim that a setting was
@@ -31,10 +34,14 @@ The runner consumes each fixture through the accepted public Kaapi consumer
 adapter and uses Kaapi for configuration/policy evidence only:
 
 ```sh
-python3 scripts/lab1.py --agent claude
-python3 scripts/lab1.py --agent codex
-python3 scripts/lab1.py --agent claude --case risky --format json
+python3 scripts/workshop.py lab1 --agent claude
+python3 scripts/workshop.py lab1 --agent codex
 ```
+
+First run `python3 scripts/workshop.py setup` (`python` in PowerShell) from the
+workshop root. Setup anonymously obtains the public Kaapi source pinned to
+`9a0bc6ba34576782675aded9e16b718c24fea9bd`, prepares its locked environment,
+and validates Kaapi `1.1.0`. It does not use a global Kaapi installation.
 
 The fixtures are synthetic and are not copied into a participant's real
 configuration. The examples correspond to the relevant configuration models:

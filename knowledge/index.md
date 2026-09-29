@@ -1,6 +1,6 @@
 ---
 type: index
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # Knowledge index
@@ -35,6 +35,8 @@ the workshop's purpose from its readiness model and its evidence boundaries.
 
 - [Participant pathways](wiki/participant-pathways.md) — Claude Code, Codex,
   and instructor-led participation boundaries.
+- [Participant Lab Guide](../docs/participant-guide.md) — canonical self-service
+  journey through preflight, Lab 1, Lab 2, interpretation, and cleanup.
 - [Evidence and provenance](wiki/evidence-and-provenance.md) — what each
   evidence class establishes and what it cannot establish.
 
@@ -53,6 +55,11 @@ the workshop's purpose from its readiness model and its evidence boundaries.
 - [Codex 0.151.0 acceptance evidence](sources/stage-2e-codex-0.151.0-acceptance.md)
   — protected successful live acceptance, generated isolated-home boundary,
   bytecode hygiene, and independent security/scope evidence.
+- [Participant self-service rehearsal](sources/participant-self-service-rehearsal.md)
+  — sanitized deterministic rehearsal, output coverage, dependency finding,
+  and evidence limitations.
+- [Kaapi public acquisition validation](sources/kaapi-public-acquisition-validation.md)
+  — credential-disabled exact-commit access and fresh locked Lab 1 rehearsal.
 
 ## Maintenance
 

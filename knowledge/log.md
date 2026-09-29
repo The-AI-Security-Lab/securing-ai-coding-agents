@@ -122,3 +122,42 @@ so recent activity can be found with simple text tools.
   bookkeeping scope failure without adding a runtime-artifact allowlist.
 - Scoped acceptance to Codex `0.151.0`, retained the outside-read
   confidentiality limitation, and required versioned revalidation.
+
+## [2026-09-28] implementation | Participant self-service and workshop UX
+
+- Replaced milestone-oriented entry text with a README front door and a
+  consolidated participant guide for one-agent preflight, Lab 1, Lab 2,
+  interpretation, troubleshooting, and exact-path cleanup.
+- Added concise Stage 2E preparation and verification summaries while
+  retaining detailed JSON evidence and unchanged Stage 2D verification
+  semantics.
+- Added generated PowerShell commands with an explicit macOS primary-validation
+  boundary, plus participant-documentation and outcome-rendering tests.
+- Preserved Kaapi's configuration-only evidence boundary and recorded the lack
+  of a validated fresh-install Kaapi path rather than substituting another
+  analyzer.
+
+## [2026-09-28] rehearsal | Participant self-service deterministic path
+
+- Rehearsed the Codex participant path without live agent launch or
+  authentication, using a deterministic edit only within `app/lookup.py`.
+- Recorded security `PASS` for all six cases, scope `PASS`, overall `PASS`, and
+  observed runtime behavior `MISSING` / `NOT TESTED`.
+- Exercised the human preparation and verification summaries and preserved the
+  disposable raw evidence outside the repository pending review.
+- Recorded the unavailable Kaapi environment as a truthful Lab 1 `NOT TESTED`
+  dependency outcome, not as a simulated Kaapi assessment.
+
+## [2026-09-29] validation | Public Kaapi acquisition and managed setup
+
+- Credential-disabled anonymous Git fetched exact Kaapi commit
+  `9a0bc6ba34576782675aded9e16b718c24fea9bd`; recorded
+  `PUBLIC_AND_ACCESSIBLE` for the observation.
+- A fresh macOS environment used the revision's locked `uv` setup, reported
+  Kaapi `1.1.0`, exposed `kaapi.analyze_text(...)`, and reproduced Codex Lab 1
+  results `FAIL`, `PASS`, and `NOT TESTED`.
+- Added a workshop-managed, fail-closed dependency path so participants do not
+  clone, configure, or globally install Kaapi themselves.
+- Rehearsed the implemented setup, preflight, and Lab 1 wrapper in fresh
+  workshop-managed state; the exact dependency passed and the three Codex
+  fixture outcomes matched accepted behavior.

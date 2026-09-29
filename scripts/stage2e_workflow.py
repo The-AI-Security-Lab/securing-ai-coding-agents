@@ -95,6 +95,16 @@ def _write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _powershell_quote(value: str) -> str:
+    """Quote one literal PowerShell argument without evaluating expressions."""
+
+    return "'" + value.replace("'", "''") + "'"
+
+
+def _powershell_command(parts: tuple[str, ...]) -> str:
+    return "& " + " ".join(_powershell_quote(part) for part in parts)
+
+
 def _load_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -219,6 +229,20 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
             },
         }
         mcp = {"mcpServers": {}}
+        claude_command = (
+            "claude",
+            "--restricted",
+            "--safe-mode",
+            "--strict-mcp-config",
+            "--mcp-config",
+            str(mcp_path),
+            "--tools",
+            "Bash,Read,Edit,Write",
+            "--permission-mode",
+            "manual",
+            "--settings",
+            str(settings_path),
+        )
         common.update(
             {
                 "agent": "Claude Code",
@@ -231,37 +255,12 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
                 "configuration": settings,
                 "mcp_configuration": mcp,
                 "launch": {
-                    "command": [
-                        "claude",
-                        "--restricted",
-                        "--safe-mode",
-                        "--strict-mcp-config",
-                        "--mcp-config",
-                        str(mcp_path),
-                        "--tools",
-                        "Bash,Read,Edit,Write",
-                        "--permission-mode",
-                        "manual",
-                        "--settings",
-                        str(settings_path),
-                    ],
+                    "command": list(claude_command),
                     "shell": "PYTHONDONTWRITEBYTECODE=1 "
-                    + " ".join(
-                        shlex.quote(part)
-                        for part in (
-                            "claude",
-                            "--restricted",
-                            "--safe-mode",
-                            "--strict-mcp-config",
-                            "--mcp-config",
-                            str(mcp_path),
-                            "--tools",
-                            "Bash,Read,Edit,Write",
-                            "--permission-mode",
-                            "manual",
-                            "--settings",
-                            str(settings_path),
-                        )
+                    + " ".join(shlex.quote(part) for part in claude_command),
+                    "powershell": (
+                        "$env:PYTHONDONTWRITEBYTECODE = '1'; "
+                        + _powershell_command(claude_command)
                     ),
                     "environment": {"PYTHONDONTWRITEBYTECODE": "1"},
                     "manual": True,
@@ -277,6 +276,16 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
             'sandbox_mode = "workspace-write"\n'
             'web_search = "disabled"\n'
         )
+        codex_command = (
+            "codex",
+            "--strict-config",
+            "--sandbox",
+            "workspace-write",
+            "--ask-for-approval",
+            "never",
+            "--cd",
+            str(workspace),
+        )
         common.update(
             {
                 "agent": "Codex",
@@ -289,34 +298,23 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
                 },
                 "configuration_text": config_text,
                 "launch": {
-                    "command": [
-                        "codex",
-                        "--strict-config",
-                        "--sandbox",
-                        "workspace-write",
-                        "--ask-for-approval",
-                        "never",
-                        "--cd",
-                        str(workspace),
-                    ],
+                    "command": list(codex_command),
                     "shell": (
                         f"CODEX_HOME={shlex.quote(str(codex_home))} "
                         "PYTHONDONTWRITEBYTECODE=1 "
-                        + " ".join(
-                            shlex.quote(part)
-                            for part in (
-                                "codex",
-                                "--strict-config",
-                                "--sandbox",
-                                "workspace-write",
-                                "--ask-for-approval",
-                                "never",
-                                "--cd",
-                                str(workspace),
-                            )
-                        )
+                        + " ".join(shlex.quote(part) for part in codex_command)
+                    ),
+                    "powershell": (
+                        f"$env:CODEX_HOME = {_powershell_quote(str(codex_home))}; "
+                        "$env:PYTHONDONTWRITEBYTECODE = '1'; "
+                        + _powershell_command(codex_command)
                     ),
                     "configuration_copy": f"cp {shlex.quote(str(config_path))} {shlex.quote(str(codex_home / 'config.toml'))}",
+                    "configuration_copy_powershell": (
+                        "Copy-Item -LiteralPath "
+                        f"{_powershell_quote(str(config_path))} -Destination "
+                        f"{_powershell_quote(str(codex_home / 'config.toml'))}"
+                    ),
                     "environment": {
                         "CODEX_HOME": str(codex_home),
                         "PYTHONDONTWRITEBYTECODE": "1",
@@ -391,6 +389,82 @@ def prepare_workflow(run_dir: Path, pathway: str) -> dict[str, Any]:
     }
     _write_json(run_dir / WORKFLOW_PATH, metadata)
     return {**prepared, "workflow": metadata, "participant_plan": plan}
+
+
+def render_prepare_summary(result: dict[str, Any]) -> str:
+    """Render the generated participant paths and commands without hiding JSON."""
+
+    plan = result["participant_plan"]
+    launch = plan["launch"]
+    lines = [
+        "LAB 2 PREPARED",
+        "",
+        f"Pathway:       {plan['agent']} {plan.get('tested_version') or ''}".rstrip(),
+        f"Run directory: {result['run_dir']}",
+        f"Workspace:     {result['workspace']}",
+        f"Task file:     {plan['task_file']}",
+        "",
+        "Use the command for your shell:",
+    ]
+    if "configuration_copy" in launch:
+        lines.extend(
+            [
+                f"Generated CODEX_HOME: {plan['codex_home']}",
+                f"macOS config copy:   {launch['configuration_copy']}",
+                f"PowerShell copy:     {launch['configuration_copy_powershell']}",
+                "",
+            ]
+        )
+    if "shell" in launch:
+        lines.append(f"macOS launch:     {launch['shell']}")
+    if "powershell" in launch:
+        lines.append(f"PowerShell launch: {launch['powershell']}")
+    if "instruction" in launch:
+        lines.append(launch["instruction"])
+    run_dir = result["run_dir"]
+    tested_version = plan.get("tested_version") or "<version>"
+    lines.extend(
+        [
+            "",
+            "After the agent exits, run from the workshop repository:",
+            (
+                "macOS record:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
+                "scripts/stage2e_workflow.py record "
+                f"--run-dir {shlex.quote(run_dir)} --agent-version {shlex.quote(tested_version)}"
+            ),
+            (
+                "macOS verify:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
+                f"scripts/stage2e_workflow.py verify --run-dir {shlex.quote(run_dir)}"
+            ),
+            (
+                "macOS report:      PYTHONDONTWRITEBYTECODE=1 python3 -B "
+                f"scripts/stage2e_workflow.py report --run-dir {shlex.quote(run_dir)}"
+            ),
+            (
+                "PowerShell record: python -B scripts/stage2e_workflow.py record "
+                f"--run-dir {_powershell_quote(run_dir)} --agent-version "
+                f"{_powershell_quote(tested_version)}"
+            ),
+            (
+                "PowerShell verify: python -B scripts/stage2e_workflow.py verify "
+                f"--run-dir {_powershell_quote(run_dir)}"
+            ),
+            (
+                "PowerShell report: python -B scripts/stage2e_workflow.py report "
+                f"--run-dir {_powershell_quote(run_dir)}"
+            ),
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "Next: read the task, launch only the selected pathway, finish the task,",
+            "EXIT THE AGENT, then record and independently verify from the workshop repository.",
+            "Preparation and workflow markers are not runtime telemetry or security evidence.",
+            "Detailed generated evidence remains available with prepare --format json.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def _load_workflow(run_dir: Path) -> dict[str, Any]:
@@ -695,10 +769,34 @@ def report_workflow(run_dir: Path) -> str:
     scope = result["scope"]
     security = result["security"]
     scope_review = result.get("scope_review", _scope_review(scope))
+    cases = security.get("cases", [])
+    passed_cases = sum(case.get("status") == lab2_harness.PASS for case in cases)
+    unexpected = scope_review.get("detected_paths", [])
     lines = [
-        f"Verified security outcome:             {security['status']}",
-        f"Scope result:                           {scope['status']}",
-        f"Overall result:                        {result['overall']}",
+        "LAB 2 VERIFICATION",
+        "",
+        "Security outcome",
+        f"  {security['status']}",
+        (
+            f"  {passed_cases}/{len(cases)} independent cases passed"
+            if cases
+            else "  Independent cases were not run"
+        ),
+        "",
+        "Change scope",
+        f"  {scope['status']}",
+        "  Expected: app/lookup.py",
+        "  Unexpected: " + (", ".join(unexpected) if unexpected else "none"),
+        "",
+        "Overall",
+        f"  {result['overall']}",
+        "",
+        "Evidence",
+        "  Independent final-state and golden-case verification",
+        "  Workflow metadata and agent self-report remain separate evidence",
+        "",
+        "Limitations",
+        "  Final-state verification != complete runtime telemetry",
         "",
         "Workflow context:",
         "  Stage 2E coding-agent workflow metadata is recorded separately from verification evidence.",
@@ -735,9 +833,9 @@ def report_workflow(run_dir: Path) -> str:
             f"  Review note:                         {scope_review['note']}",
         ]
     )
-    if scope_review.get("detected_paths"):
+    if unexpected:
         lines.append("  Detected paths requiring review:")
-        lines.extend(f"    {path}" for path in scope_review["detected_paths"])
+        lines.extend(f"    {path}" for path in unexpected)
     lines.extend(["", "Golden verification:"])
     for case in security.get("cases", []):
         lines.append(f"  {case['id']:<36} {case['status']}")
@@ -769,6 +867,7 @@ def main(argv: list[str] | None = None) -> int:
         help="fresh destination path; if omitted, Stage 2E generates one",
     )
     prepare_parser.add_argument("--pathway", choices=PATHWAYS, required=True)
+    prepare_parser.add_argument("--format", choices=("human", "json"), default="json")
 
     record_parser = subparsers.add_parser("record")
     record_parser.add_argument("--run-dir", type=Path, required=True)
@@ -794,7 +893,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "prepare":
             run_dir = args.run_dir if args.run_dir is not None else new_run_dir()
-            print(json.dumps(prepare_workflow(run_dir, args.pathway), indent=2, sort_keys=True))
+            prepared = prepare_workflow(run_dir, args.pathway)
+            if args.format == "human":
+                print(render_prepare_summary(prepared))
+            else:
+                print(json.dumps(prepared, indent=2, sort_keys=True))
         elif args.command == "record":
             print(
                 json.dumps(

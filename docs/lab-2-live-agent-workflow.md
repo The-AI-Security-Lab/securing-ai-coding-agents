@@ -1,4 +1,9 @@
-# Lab 2 — Live coding-agent workflow
+# Lab 2 — Verify an AI-generated security fix
+
+For the complete self-service sequence, macOS/PowerShell commands,
+troubleshooting, and cleanup, start with the
+[Participant Lab Guide](participant-guide.md). This document retains the
+detailed accepted workflow and evidence boundary.
 
 This is the participant guide for Stage 2E. Choose exactly one pathway:
 Claude Code, Codex, or the instructor-led fallback. You do not need to
@@ -28,7 +33,7 @@ command does not create the target before Stage 2D prepares it; the printed
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/stage2e_workflow.py prepare \
-  --pathway claude
+  --pathway claude --format human
 ```
 
 Copy the printed `run_dir` value into `RUN_DIR` before continuing, for
@@ -43,8 +48,9 @@ For Codex, use `--pathway codex`. For the fallback, use
 
 ### EXPECTED OUTPUT
 
-The command prints a disposable workspace path, a participant task, a
-secret-free pathway plan, and the tested-version candidate:
+The command prints a concise participant summary with disposable paths and
+generated macOS/PowerShell commands. Detailed JSON remains available with
+`--format json`. The tested-version pathways are:
 
 - Claude Code `2.1.283`;
 - Codex `0.151.0`; or

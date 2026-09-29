@@ -1,47 +1,138 @@
 # Securing AI Coding Agents: From Guardrails to Verification
 
-A hands-on workshop from **[AI Security Lab](https://www.aisecuritylab.com/)**.
-
-This 90-minute virtual workshop explores how to govern the capabilities of AI coding agents and verify that security controls work as intended. We cover both Claude Code and Codex. You can complete the exercises on your own machine or follow the instructor without installing the tools.
+A 90-minute, hands-on workshop from [AI Security Lab](https://www.aisecuritylab.com/).
+You will inspect an AI coding-agent configuration, constrain its authority,
+let one supported agent attempt a synthetic security fix, and independently
+verify both the fix and its change scope.
 
 ## Start here
 
-**Attending the workshop?** Read the [Know Before You Go guide](docs/know-before-you-go.md) for the learning goals, participation options, and preparation advice.
+1. Read the [Participant Lab Guide](docs/participant-guide.md).
+2. Choose **one** path: Claude Code, Codex, or instructor-led fallback. You do
+   not need both agents.
+3. From this repository root, prepare the pinned workshop dependency, then run
+   preflight:
 
-**Planning to work hands-on?** The validated Hands-on Setup & Preflight guide will be published in this repository before the workshop. Please complete setup and authentication before the event. You need only one supported coding agent, not both.
+   ```sh
+   python3 scripts/workshop.py setup
+   python3 scripts/preflight.py --agent claude
+   # or: python3 scripts/preflight.py --agent codex
+   # or: python3 scripts/preflight.py --agent none --kaapi skip
+   ```
 
-**Bookmark this repository.** Return here for the setup guide, lab materials, and supporting resources as they become available. Links will be added when those materials are validated and published.
+4. Complete [Lab 1](docs/lab-1-configuration-assessment.md), then
+   [Lab 2](docs/lab-2-live-agent-workflow.md).
+5. Interpret the evidence before cleaning the generated lab state.
 
-## Workshop labs
+Python 3.11 or newer, Git, and `uv` are required for the hands-on path. Setup
+uses anonymous public access to obtain the exact validated Kaapi revision into
+`.workshop-deps/`; it does not install Kaapi globally. Docker, a VM, a
+GitHub account, and both coding agents are not required. Agent authentication
+depends on your provider and organization; if it is unavailable, use the
+instructor-led path rather than weakening the lab boundary.
 
-### Lab 1 — Govern and harden AI coding agents
+The workflow is designed for macOS and Windows/PowerShell. Primary end-to-end
+validation for this release was performed on macOS; the PowerShell commands
+and generated paths are test-covered but have not received equivalent live
+agent acceptance.
 
-Explore Claude Code and Codex architecture, security-relevant configurations, permissions, tools, and execution boundaries. Apply practical controls to reduce unnecessary agent authority.
+## What you will learn
 
-### Lab 2 — Verify security controls
+```text
+Inspect → Constrain → Run → Observe → Verify → Decide
+```
 
-Run the [live coding-agent workflow](docs/lab-2-live-agent-workflow.md) with
-one selected agent or the instructor-led fallback. Use the deterministic
-Stage 2D verifier to assess the synthetic security contract and final-state
-scope independently of the agent's claim.
+- **Lab 1 — Govern an AI coding agent with configuration analysis** asks:
+  “Should we let this agent operate like this?” You use Kaapi, AI Security
+  Lab's open-source coding-agent security analysis tool, with supplied
+  synthetic configurations.
+- **Lab 2 — Verify an AI-generated security fix** asks: “The agent says the
+  vulnerability is fixed. How do we know?” You independently check the
+  security property and final change scope.
 
-## Continue learning
+Together: govern what the agent can do, and verify what it actually delivers.
+This is not a generic Claude Code or Codex tutorial.
 
-Explore [AI Security Lab](https://www.aisecuritylab.com/) for open-source tools, research, learning resources, and future hands-on workshops.
+## What you will do
 
-## Project knowledge base
+Choose Claude Code **or** Codex and stay on that path:
 
-The repository includes a maintained, source-backed [project knowledge base](knowledge/index.md).
-It links the canonical workshop documents into durable pages covering scope,
-readiness semantics, participant pathways, and evidence boundaries. Run
-`python3 scripts/wiki_check.py` after updating it.
+- Assess risky, hardened, and malformed synthetic configurations in Lab 1.
+- Prepare a disposable Lab 2 workspace and generated agent boundary.
+- Give the selected agent an exact synthetic remediation task.
+- Exit the agent before verification.
+- Independently verify the lookup security property and the strict
+  `app/lookup.py` change boundary.
+- Investigate any scope failure before cleanup.
 
-*Validated technical setup instructions and lab materials will be published separately. This repository currently contains participant orientation materials only.*
+The other vendor's fixtures are optional exploration. Never use a production
+repository, production credentials, real incident data, or a real employee or
+customer configuration.
+
+## How to read results
+
+The labs keep four evidence categories separate:
+
+1. configured authority;
+2. resolved permitted capabilities;
+3. observed runtime behavior; and
+4. independently verified runtime outcomes.
+
+Kaapi supplies configuration evidence for categories 1 and 2. It does not
+prove runtime enforcement or the delivered result. Agent self-report is not
+independent evidence. Lab 2 verifies a bounded final outcome; it does not
+provide complete runtime telemetry.
+
+In Lab 2, security and scope are independent. Overall `PASS` requires both
+security `PASS` and scope `PASS`. For unexpected paths:
+
+```text
+Detect → Explain → Classify → Decide → Fix / Explicitly Allow
+```
+
+Do not whitelist what you have not explained, and do not delete unexpected
+files before interpreting the evidence.
+
+## Time box
+
+| Activity | Required time |
+| --- | ---: |
+| Orientation, choose one path, preflight | 10 minutes |
+| Lab 1 fixture inspection and assessment | 20 minutes |
+| Lab 1 evidence debrief | 10 minutes |
+| Lab 2 prepare, agent remediation, and exit | 25 minutes |
+| Independent verification and decision | 15 minutes |
+| Cleanup and wrap-up | 10 minutes |
+
+Optional other-vendor exploration is outside the required 90-minute path.
+
+## Troubleshooting
+
+Use the [Lab Guide troubleshooting section](docs/participant-guide.md#h-troubleshooting).
+Do not bypass the verifier to obtain `PASS`. `NOT TESTED` and `INCONCLUSIVE`
+are meaningful outcomes, not failures to hide.
+
+## Cleanup
+
+Cleanup is the final lab step, not a way to erase a scope failure. First exit
+the agent, interpret and optionally preserve sanitized evidence, then remove
+only the exact generated run and isolated agent-home paths. Local deletion of
+an authenticated temporary home is not proof of provider-side token/session
+revocation. See [Safe cleanup](docs/participant-guide.md#i-safe-cleanup).
+
+## Instructor and engineering resources
+
+- [Know before you go](docs/know-before-you-go.md)
+- [Hands-on setup and preflight](docs/hands-on-setup.md)
+- [Participant Lab Guide](docs/participant-guide.md)
+- [Project knowledge base](knowledge/index.md)
+
+The knowledge base links engineering design and provenance records. Internal
+milestone documents are supporting evidence, not prerequisites for participants.
 
 ## Licensing and contributions
 
-We welcome contributions of synthetic labs, security evals, and verification workflows. See [Contributing](CONTRIBUTING.md) before submitting changes.
-
-Workshop teaching materials and reusable code have **different proposed license terms**: see [Workshop materials license](LICENSE), [Code license](LICENSE-CODE.md), and [Notices](NOTICE.md). Personal learning, internal enterprise use of the harness, and attributed internal colleague-to-colleague teaching are intended to be permitted. Distributing the harness in a commercial product or using workshop materials for paid training or consulting requires separate written approval.
-
-**Publication note:** These custom license drafts require confirmation of the legal rights holder and legal review before they are treated as final. Third-party tools retain their own licenses. This workshop repository should be described as publicly available or source-available, not universally OSI open source.
+See [Contributing](CONTRIBUTING.md), [Workshop materials license](LICENSE),
+[Code license](LICENSE-CODE.md), and [Notices](NOTICE.md). The custom license
+drafts require confirmation of the legal rights holder and legal review before
+being treated as final. Third-party tools retain their own licenses.

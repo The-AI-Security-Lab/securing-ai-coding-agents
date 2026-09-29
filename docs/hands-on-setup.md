@@ -1,9 +1,8 @@
 # Hands-on Setup & Preflight
 
-This guide is the Stage 2A technical baseline. It establishes a minimum
-participant environment, one selected coding-agent pathway, and a safe
-synthetic check. It does not publish or run the complete Lab 1 or Lab 2
-exercises.
+This guide establishes the minimum participant environment, one selected
+coding-agent pathway, and a safe synthetic check. Continue with the
+[Participant Lab Guide](participant-guide.md) for Lab 1 and Lab 2.
 
 Choose exactly one pathway:
 
@@ -37,12 +36,13 @@ obtained.
 
 | Requirement | Hands-on | Instructor-led | Notes |
 | --- | --- | --- | --- |
-| Python 3.11 or newer | Required | Not required | The preflight uses only the standard library. The minimum is aligned with the inspected Kaapi source; future labs may add dependencies. |
+| Python 3.11 or newer | Required | Not required | Shared minimum for the workshop tools and accepted Kaapi revision. |
 | `scripts/preflight.py` and this guide | Required | Not required | These are the only participant files checked by the preflight. |
 | One selected agent | Claude Code **or** Codex | Not required | Do not install both for this workshop. |
-| Git | Required only when using a Git checkout | Not required | A downloaded ZIP/extracted directory is supported. |
+| Git | Required | Not required | Workshop setup uses anonymous Git access for pinned Kaapi even when workshop materials came from a ZIP. |
+| `uv` | Required | Not required | Setup detects it but does not install it globally. Use your approved software channel if absent. |
 | GitHub account/authentication | Not required | Not required | A public download does not require GitHub write access. |
-| Kaapi | Optional and non-gating | Not required | Integration and participant execution requirements are not yet validated. |
+| Workshop-managed Kaapi | Required for a live Lab 1 assessment | Not required | `python scripts/workshop.py setup` obtains the public source at the exact validated revision and prepares its locked local environment. |
 
 The validation report, approved README, orientation guide, and eventual lab
 fixtures are maintainer or later-milestone concerns. Their presence is not a
@@ -116,12 +116,14 @@ settings.
 
 ## Run the deterministic preflight
 
-From the workshop root, run exactly one command:
+For either hands-on path, prepare managed Kaapi and then run exactly one
+preflight command. Instructor-led participants skip setup:
 
 ```bash
+python3 scripts/workshop.py setup
 python3 scripts/preflight.py --agent claude
 python3 scripts/preflight.py --agent codex
-python3 scripts/preflight.py --agent none
+python3 scripts/preflight.py --agent none --kaapi skip
 ```
 
 For an extracted ZIP, make the acquisition mode explicit:
@@ -147,9 +149,9 @@ variables or credentials, but executable paths can still identify a machine.
 - A selected-agent executable `FAIL` means that pathway is unavailable; do not
   install the other agent unless you choose to switch pathways.
 - `NOT TESTED` means a participant or live-agent action remains outstanding.
-- `INCONCLUSIVE` means a probe cannot establish the claimed property; this is
-  the expected outcome for an unavailable or incompatible optional Kaapi CLI
-  availability probe.
+- `INCONCLUSIVE` means a probe cannot establish the claimed property. Missing
+  or unverified workshop-managed Kaapi is instead a required `FAIL` for the
+  hands-on path.
 - `NOT APPLICABLE` means the check is outside the selected pathway.
 
 ## Safe synthetic agent check
@@ -214,35 +216,29 @@ contains exactly the two expected regular files. The output still reports
 agent provenance and approval review as `NOT TESTED`; filesystem contents alone
 cannot establish who created the file or how an approval was handled.
 
-## Optional Kaapi path
+## Prepare and check workshop-managed Kaapi
 
-Kaapi is not a participant prerequisite. Do not install it solely for this
-milestone. The canonical local Kaapi source inspected for this review is a
-separate checkout and is not part of this workshop repository.
+Kaapi is the Lab 1 configuration-analysis tool. Workshop setup owns its local
+acquisition and environment; participants do not clone or configure a second
+repository manually. Do not install an unverified similarly named package.
 
-If a maintainer provides an approved Kaapi checkout, probe CLI availability
-without changing it:
-
-```bash
-python3 scripts/preflight.py \
-  --agent codex \
-  --kaapi check \
-  --kaapi-project /path/to/kaapi
-```
-
-The supported source workflow observed in that checkout is labeled vendor/
-project-local documentation, not a workshop participant guarantee:
+From the workshop root run:
 
 ```bash
-uv sync --frozen --group dev
-uv run kaapi version
-uv run kaapi check path/to/config.toml --runtime codex --format json
+python3 scripts/workshop.py setup
+python3 scripts/preflight.py --agent codex
 ```
 
-The result is informational and non-gating. A successful version result proves
-only that the Kaapi CLI is available in that prepared environment; it is not
-proof of workshop integration. Configuration-analysis evidence is separate and
-must come from a synthetic `kaapi check ... --format json` run.
+PowerShell uses `python` instead of `python3`. Setup checks Python 3.11+, Git,
+and `uv`; anonymously obtains the canonical public source; checks out exact
+commit `9a0bc6ba34576782675aded9e16b718c24fea9bd`; and internally runs its locked
+`uv sync --frozen --group dev` preparation. Participants do not run Kaapi's
+development commands or maintain its checkout separately.
+
+Preflight fails closed when the managed checkout is absent, at a different
+revision, or lacks Kaapi `1.1.0` and `kaapi.analyze_text(...)`. It never falls
+back to a global Kaapi. This establishes configuration-analysis readiness, not
+agent runtime behavior or independently verified outcomes.
 
 ## Official documentation checked
 

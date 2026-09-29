@@ -1,12 +1,14 @@
 ---
 type: pathway
 status: current
-updated: 2026-09-25
+updated: 2026-09-29
 sources:
   - ../sources/repository-source-map.md
   - ../sources/external-source-map.md
   - ../../docs/hands-on-setup.md
   - ../../docs/know-before-you-go.md
+  - ../../docs/participant-guide.md
+  - ../sources/kaapi-public-acquisition-validation.md
 tags: [participants, Claude-Code, Codex, setup]
 ---
 
@@ -17,20 +19,27 @@ instructor-led path.
 
 | Path | What is required | What the preflight can establish |
 | --- | --- | --- |
-| Claude Code hands-on | Python 3.11+, participant files, Claude executable, and separate manual authentication/action review. | Local deterministic checks for the selected executable and required files. |
-| Codex hands-on | Python 3.11+, participant files, Codex executable, and separate manual authentication/action review. | Local deterministic checks for the selected executable and required files. |
+| Claude Code hands-on | Python 3.11+, Git, `uv`, workshop-managed Kaapi, Claude executable, and separate manual authentication/action review. | Local deterministic checks for the selected executable, required files, and exact managed Kaapi revision/version/API. |
+| Codex hands-on | Python 3.11+, Git, `uv`, workshop-managed Kaapi, Codex executable, and separate manual authentication/action review. | Local deterministic checks for the selected executable, required files, and exact managed Kaapi revision/version/API. |
 | Instructor-led | No local agent or Python requirement. | The supported participation mode; not hands-on readiness. |
 
 The unselected agent is not a requirement and cannot fail the selected
-pathway. Git is required only when Git acquisition is explicitly selected;
-an extracted ZIP is supported. Kaapi is optional and non-gating for this
-milestone.
+pathway. Hands-on setup anonymously obtains exact Kaapi commit
+`9a0bc6ba34576782675aded9e16b718c24fea9bd` into ignored workshop-managed state
+and prepares its locked environment. Preflight fails closed if that checkout,
+Kaapi `1.1.0`, or its public API differs; it never substitutes a global Kaapi.
+Instructor-led participation may skip this hands-on dependency.
 
-Keep approval prompts enabled, use synthetic material, and perform the bounded
-live action from a disposable directory outside the workshop checkout.
+The self-service path runs preflight, one vendor's three Lab 1 fixtures, and
+one generated Lab 2 pathway. It preserves generated authority boundaries,
+requires agent exit before verification, and delays exact-path cleanup until
+evidence has been interpreted. PowerShell commands are generated and tested;
+primary end-to-end live validation remains macOS.
 
 ## Sources and related pages
 
 - [Hands-on setup and preflight](../../docs/hands-on-setup.md)
+- [Participant Lab Guide](../../docs/participant-guide.md)
 - [Project overview](project-overview.md)
 - [Readiness and status semantics](readiness-and-status-semantics.md)
+- [Kaapi public acquisition validation](../sources/kaapi-public-acquisition-validation.md)

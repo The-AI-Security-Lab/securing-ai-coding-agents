@@ -43,9 +43,9 @@ the security of every agent, model, repository, or production environment.
 ### Hands-on
 
 Choose this route if you want to execute the exercises on your own machine.
-Complete the validated technical setup and preflight instructions that will be
-published before the event, then use the workshop materials and synthetic
-fixtures provided for the labs.
+Complete the [hands-on setup and preflight](hands-on-setup.md), then follow the
+[Participant Lab Guide](participant-guide.md) using the supplied synthetic
+fixtures.
 
 ### Instructor-led
 
@@ -78,9 +78,9 @@ helpful to know how to:
 - distinguish an agent's proposed action from an action you have actually
   approved or executed.
 
-The final preflight will identify the supported route for the event. Do not
-install an agent, select a version, or configure a provider based on this guide
-alone.
+The preflight identifies the selected local route without proving
+authentication or runtime behavior. Use the generated Lab 2 configuration and
+commands rather than inventing a boundary from this orientation page.
 
 ## Authentication and access
 
@@ -137,12 +137,14 @@ have authorization to use.
 Before the event:
 
 1. choose hands-on or instructor-led participation;
-2. read the validated technical setup when it is published;
+2. read the validated [hands-on setup](hands-on-setup.md);
 3. confirm that you have the required access for your chosen pathway;
 4. run the published preflight in a safe, approved environment; and
 5. keep the workshop guide available so you can switch to instructor-led
    participation if local setup is unavailable or incompatible.
 
-Exact installation commands, Python version requirements, agent setup, and repository commands are intentionally not included here. **Bookmark the workshop repository:** the validated Hands-on Setup & Preflight guide and lab materials will be published there before the event.
+Exact commands and the current Python requirement are in the
+[Participant Lab Guide](participant-guide.md). Bookmark the repository so the
+guide and generated commands remain available during the lab.
 
 For updates and further learning, visit the [AI Security Lab](https://www.aisecuritylab.com/).

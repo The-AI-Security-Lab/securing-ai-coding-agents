@@ -15,6 +15,7 @@ class PreflightTests(unittest.TestCase):
         if guide:
             (root / "docs").mkdir()
             (root / "docs" / "hands-on-setup.md").write_text("# fixture\n", encoding="utf-8")
+            (root / "docs" / "participant-guide.md").write_text("# fixture\n", encoding="utf-8")
 
     def runner(self, *, git_checkout: bool = False, kaapi_exit: int = 0):
         def run(command, cwd):
@@ -117,7 +118,7 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(self.check(result, "Selected agent executable (Claude Code)").status, preflight.FAIL)
             self.assertEqual(result.exit_code, 1)
 
-    def test_optional_kaapi_absent_is_inconclusive_and_non_gating(self):
+    def test_managed_kaapi_absent_is_a_gating_failure(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             self.make_repo(root)
@@ -125,33 +126,45 @@ class PreflightTests(unittest.TestCase):
                 agent="codex",
                 acquisition="zip",
                 kaapi_mode="check",
-                kaapi_project=None,
+                kaapi_project=root / ".workshop-deps",
                 synthetic_action="none",
                 synthetic_dir=None,
                 repo_root=root,
                 runner=self.runner(),
                 locator=self.locator("codex"),
             )
-            self.assertEqual(self.check(result, "Kaapi CLI availability").status, preflight.INCONCLUSIVE)
-            self.assertEqual(result.exit_code, 0)
+            check = self.check(result, "Workshop Kaapi readiness")
+            self.assertEqual(check.status, preflight.FAIL)
+            self.assertIn("NOT_PREPARED", check.observed)
+            self.assertEqual(result.exit_code, 1)
 
-    def test_optional_kaapi_available_but_incompatible_is_inconclusive(self):
+    def test_managed_kaapi_wrong_revision_is_a_gating_failure(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             self.make_repo(root)
-            result = preflight.build_result(
-                agent="codex",
-                acquisition="zip",
-                kaapi_mode="check",
-                kaapi_project=None,
-                synthetic_action="none",
-                synthetic_dir=None,
-                repo_root=root,
-                runner=self.runner(kaapi_exit=2),
-                locator=self.locator("codex", "kaapi"),
-            )
-            self.assertEqual(self.check(result, "Kaapi CLI availability").status, preflight.INCONCLUSIVE)
-            self.assertEqual(result.exit_code, 0)
+            kaapi = root / ".workshop-deps" / "kaapi"
+            kaapi.mkdir(parents=True)
+            (kaapi / ".git").mkdir()
+            with mock.patch.object(
+                preflight,
+                "inspect_kaapi",
+                return_value=preflight.KaapiStatus(
+                    "UNVERIFIED", "expected revision; observed wrong", kaapi
+                ),
+            ):
+                result = preflight.build_result(
+                    agent="codex",
+                    acquisition="zip",
+                    kaapi_mode="check",
+                    kaapi_project=root / ".workshop-deps",
+                    synthetic_action="none",
+                    synthetic_dir=None,
+                    repo_root=root,
+                    runner=self.runner(kaapi_exit=2),
+                    locator=self.locator("codex", "kaapi"),
+                )
+            self.assertEqual(self.check(result, "Workshop Kaapi readiness").status, preflight.FAIL)
+            self.assertEqual(result.exit_code, 1)
 
     def test_json_exposes_readiness_separately_from_exit_code(self):
         with tempfile.TemporaryDirectory() as temp:

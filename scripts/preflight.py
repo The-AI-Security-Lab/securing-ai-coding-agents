@@ -19,6 +19,13 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable, Sequence
 
+try:
+    from scripts.workshop import DEPENDENCY_ROOT, KaapiStatus, inspect_kaapi
+except ModuleNotFoundError as exc:  # Support direct `python3 scripts/preflight.py`.
+    if exc.name != "scripts":
+        raise
+    from workshop import DEPENDENCY_ROOT, KaapiStatus, inspect_kaapi
+
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -183,7 +190,11 @@ def _version_check(
 
 
 def _participant_file_check(repo_root: Path) -> Check:
-    required_files = ("scripts/preflight.py", "docs/hands-on-setup.md")
+    required_files = (
+        "scripts/preflight.py",
+        "docs/hands-on-setup.md",
+        "docs/participant-guide.md",
+    )
     missing = [path for path in required_files if not (repo_root / path).is_file()]
     return Check(
         name="Participant files",
@@ -193,7 +204,7 @@ def _participant_file_check(repo_root: Path) -> Check:
         observed="all required participant paths are present"
         if not missing
         else f"missing: {', '.join(missing)}",
-        limitations="The validation report, README, and GitHub credentials are maintainer/orientation concerns and are not required by this participant check. Event lab files are not checked in Stage 2A.",
+        limitations="This confirms local participant entry points only; it does not establish authentication, live-agent behavior, or lab outcomes.",
     )
 
 
@@ -502,66 +513,22 @@ def kaapi_check(
 ) -> Check:
     if mode == "skip":
         return Check(
-            name="Kaapi CLI availability",
-            category="optional",
+            name="Workshop Kaapi readiness",
+            category="lab1",
             status=NOT_APPLICABLE,
-            command_or_action="use --kaapi check only for an explicit, approved Kaapi CLI availability probe",
-            observed="Kaapi is not a Stage 2A participant prerequisite",
-            limitations="Kaapi installation and participant execution requirements are not a validated workshop dependency. This check is non-gating.",
+            command_or_action="use --kaapi skip only for instructor-led participation",
+            observed="Kaapi availability was not probed by preflight",
+            limitations="Kaapi is required for hands-on Lab 1. Skip it only for the instructor-led recorded-evidence path.",
         )
-
-    command: list[str]
-    command_path: str | None
-    working_directory = cwd
-    if project is not None:
-        project = project.expanduser().resolve()
-        if not project.is_dir() or not (project / "pyproject.toml").is_file():
-            return Check(
-                name="Kaapi CLI availability",
-                category="optional",
-                status=INCONCLUSIVE,
-                command_or_action=f"uv run --project {project} kaapi version",
-                observed="explicit Kaapi project is missing or does not contain pyproject.toml",
-                limitations="The optional probe does not install dependencies or modify the Kaapi repository. Use the canonical source and a prepared environment.",
-            )
-        venv_command = project / ".venv" / "bin" / "kaapi"
-        if venv_command.is_file() and venv_command.stat().st_mode & 0o111:
-            command = [str(venv_command), "version"]
-            command_path = str(venv_command)
-        elif locator("uv") is not None:
-            command = ["uv", "run", "--project", str(project), "kaapi", "version"]
-            command_path = locator("uv")
-        else:
-            return Check(
-                name="Kaapi CLI availability",
-                category="optional",
-                status=INCONCLUSIVE,
-                command_or_action=f"uv run --project {project} kaapi version",
-                observed="Kaapi source was found, but neither its prepared .venv nor uv was available",
-                limitations="The optional probe does not install dependencies or modify the Kaapi repository; this is not a participant failure.",
-            )
-        working_directory = project
-    else:
-        command_path = locator("kaapi")
-        command = ["kaapi", "version"]
-        if command_path is None:
-            return Check(
-                name="Kaapi CLI availability",
-                category="optional",
-                status=INCONCLUSIVE,
-                command_or_action="kaapi version",
-                observed="Kaapi was not found on PATH",
-                limitations="This optional probe cannot establish compatibility without Kaapi installed. The result never causes the preflight to fail.",
-            )
-
-    returncode, output = runner(command, working_directory)
+    dependency_root = project if project is not None else DEPENDENCY_ROOT
+    status = inspect_kaapi(dependency_root)
     return Check(
-        name="Kaapi CLI availability",
-        category="optional",
-        status=PASS if returncode == 0 else INCONCLUSIVE,
-        command_or_action=_command_text(command),
-        observed=f"{output or f'exit {returncode}: no version output'} ({command_path})",
-        limitations="A version result is not evidence of workshop-lab integration, participant execution requirements, or runtime security outcomes. This check is informational and non-gating.",
+        name="Workshop Kaapi readiness",
+        category="lab1",
+        status=PASS if status.ready else FAIL,
+        command_or_action="python scripts/workshop.py setup",
+        observed=f"{status.state}: {status.detail}",
+        limitations="This validates the pinned workshop-managed configuration-analysis dependency. It does not establish agent runtime behavior or independently verified outcomes.",
     )
 
 
@@ -638,7 +605,7 @@ def result_as_dict(result: PreflightResult) -> dict[str, object]:
 
 def render_text(result: PreflightResult) -> str:
     lines = [
-        "Stage 2A local preflight",
+        "Workshop local preflight",
         f"Selected agent: {result.selected_agent}",
         f"Acquisition: {result.acquisition}",
         f"Kaapi probe: {result.kaapi_probe}",
@@ -684,13 +651,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--kaapi",
         choices=("skip", "check"),
-        default="skip",
-        help="optional informational Kaapi CLI availability probe; it never gates the result",
+        default="check",
+        help="check workshop-managed Kaapi readiness; use skip only for instructor-led participation",
     )
     parser.add_argument(
         "--kaapi-project",
         type=Path,
-        help="explicit local Kaapi source checkout for the optional CLI availability probe",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--synthetic",

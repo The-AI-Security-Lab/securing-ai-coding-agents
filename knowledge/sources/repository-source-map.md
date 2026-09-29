@@ -1,12 +1,13 @@
 ---
 type: source-manifest
 status: current
-updated: 2026-09-28
+updated: 2026-09-29
 sources:
   - ../../README.md
   - ../../CONTRIBUTING.md
   - ../../docs/know-before-you-go.md
   - ../../docs/hands-on-setup.md
+  - ../../docs/participant-guide.md
   - ../../docs/stage-2a-validation-report.md
   - ../../docs/stage-2a.1-kaapi-consumer-validation.md
   - ../../scripts/kaapi_consumer.py
@@ -32,6 +33,10 @@ sources:
   - ../../knowledge/sources/stage-2e-live-agent-experiments.md
   - ../../knowledge/sources/stage-2e-claude-2.1.283-acceptance.md
   - ../../knowledge/sources/stage-2e-codex-0.151.0-acceptance.md
+  - ../../knowledge/sources/participant-self-service-rehearsal.md
+  - ../../knowledge/sources/kaapi-public-acquisition-validation.md
+  - ../../scripts/workshop.py
+  - ../../tests/test_workshop.py
 tags: [provenance, repository]
 ---
 
@@ -47,6 +52,7 @@ wiki pages should link to them and should not silently diverge from them.
 | [`CONTRIBUTING.md`](../../CONTRIBUTING.md) | Contribution, safety, provenance, and review expectations. |
 | [`docs/know-before-you-go.md`](../../docs/know-before-you-go.md) | Participant learning goals and participation choices. |
 | [`docs/hands-on-setup.md`](../../docs/hands-on-setup.md) | Participant setup, safety boundary, preflight, and synthetic workflow. |
+| [`docs/participant-guide.md`](../../docs/participant-guide.md) | Canonical self-service Lab 1-to-Lab 2 journey, platform commands, interpretation, troubleshooting, and safe cleanup. |
 | [`docs/stage-2a-validation-report.md`](../../docs/stage-2a-validation-report.md) | Engineering evidence, limitations, status vocabulary, and validation scope. |
 | [`docs/stage-2a.1-kaapi-consumer-validation.md`](../../docs/stage-2a.1-kaapi-consumer-validation.md) | Exact-commit Kaapi P2.1 consumer evidence, limitations, and closeout result. |
 | [`docs/stage-2b-lab-technical-design.md`](../../docs/stage-2b-lab-technical-design.md) | Accepted design for the Lab 1 experience, Lab 2 verification boundary, scenarios, and implementation deferral. |
@@ -68,6 +74,10 @@ wiki pages should link to them and should not silently diverge from them.
 | [`knowledge/sources/stage-2e-live-agent-experiments.md`](stage-2e-live-agent-experiments.md) | Provisional manually supplied live observations for exact Claude Code and Codex versions/profiles, including the Codex scope-failure example. |
 | [`knowledge/sources/stage-2e-claude-2.1.283-acceptance.md`](stage-2e-claude-2.1.283-acceptance.md) | Protected Claude Code 2.1.283 acceptance result, strong local runtime-bookkeeping classification evidence, and strict scope-review interpretation. |
 | [`knowledge/sources/stage-2e-codex-0.151.0-acceptance.md`](stage-2e-codex-0.151.0-acceptance.md) | Protected Codex 0.151.0 successful acceptance, exact generated boundary, bytecode hygiene, agent claim, and independent result. |
+| [`knowledge/sources/participant-self-service-rehearsal.md`](participant-self-service-rehearsal.md) | Sanitized deterministic self-service rehearsal, participant-output coverage, dependency finding, and explicit non-live limitations. |
+| [`knowledge/sources/kaapi-public-acquisition-validation.md`](kaapi-public-acquisition-validation.md) | Credential-disabled public exact-commit acquisition, locked environment, and fresh Codex Lab 1 results. |
+| [`scripts/workshop.py`](../../scripts/workshop.py) | Pinned workshop-managed Kaapi acquisition, validation, and Lab 1 launcher. |
+| [`tests/test_workshop.py`](../../tests/test_workshop.py) | Fail-closed managed-dependency and platform-path tests. |
 | [`scripts/preflight.py`](../../scripts/preflight.py) | Executable behavior for deterministic checks and synthetic artifact verification. |
 | [`tests/test_preflight.py`](../../tests/test_preflight.py) | Mocked regression coverage for the preflight contract. |
 | [`scripts/kaapi_consumer.py`](../../scripts/kaapi_consumer.py) | Minimal workshop-side consumer contract for Kaapi configuration evidence and grading. |
