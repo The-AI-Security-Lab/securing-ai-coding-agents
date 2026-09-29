@@ -245,6 +245,7 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
             "manual",
             "--settings",
             str(settings_path),
+            TASK,
         )
         common.update(
             {
@@ -289,6 +290,7 @@ def build_participant_plan(run_dir: Path, pathway: str) -> dict[str, Any]:
             "never",
             "--cd",
             str(workspace),
+            TASK,
         )
         common.update(
             {
@@ -420,7 +422,7 @@ def render_prepare_summary(result: dict[str, Any], *, verbose: bool = False) -> 
         "",
         f"Selected agent: {plan['agent']} {plan.get('tested_version') or ''}".rstrip(),
         "The isolated workshop setup is complete.",
-        "The selected agent will now start in the generated Lab 2 workspace.",
+        "The selected agent will now start in the generated Lab 2 workspace with the task already entered as its first prompt.",
     ]
     if verbose:
         lines.extend(

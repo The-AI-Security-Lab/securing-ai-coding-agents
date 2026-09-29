@@ -54,14 +54,31 @@ class ParticipantDocumentationTests(unittest.TestCase):
             "scripts/preflight.py",
             "scripts/workshop.py setup",
             "scripts/workshop.py lab1",
+            "scripts/workshop.py lab1 --agent codex --verbose",
+            "scripts/workshop.py lab1 --agent codex --evidence",
             "scripts/workshop.py lab2 --agent codex",
             "scripts/workshop.py lab2 verify",
+            "scripts/workshop.py lab2 cleanup",
             "scripts/workshop.py cleanup",
             "--dry-run --verbose",
         ):
             self.assertIn(expected, self.guide)
         self.assertNotIn("whitelist `.claude`", self.guide)
         self.assertNotIn("whitelist `__pycache__`", self.guide)
+        self.assertNotIn("scripts/lab1.py --agent codex --format evidence", self.guide)
+        self.assertIn("submits it automatically as the selected agent's first prompt", self.guide)
+        self.assertIn("identified Lab 2 workshop state", self.guide)
+
+    def test_guide_documents_lab2_recovery_and_cleanup_distinction(self) -> None:
+        for expected in (
+            "A Lab 2 run already exists",
+            "No Lab 2 state exists for cleanup",
+            "The agent did not complete the task",
+            "Difference between cleanup commands",
+            "normal Claude/Codex configuration or authentication",
+            "not required on the normal path",
+        ):
+            self.assertIn(expected, self.guide)
 
     def test_managed_kaapi_path_is_pinned_and_not_manual(self) -> None:
         combined = self.readme + self.guide

@@ -34,13 +34,13 @@ The self-service path runs a concise preflight, one vendor's three Lab 1
 fixtures, and one generated Lab 2 pathway through `scripts/workshop.py`. The
 wrapper starts the selected agent in the generated workspace, automatically
 copies Codex's generated configuration into an isolated workshop-owned home,
-remembers the active run, and performs lifecycle bookkeeping before independent
+remembers the retained run, and performs lifecycle bookkeeping before independent
 verification. It does not treat process exit or an agent claim as task success.
 PowerShell commands are platform-separated and test-covered; primary
 end-to-end live validation remains macOS.
 
 Cleanup removes only provenance-verified workshop state: managed Kaapi, the
-active Lab 2 run, and any marked isolated Codex home. It refuses paths whose
+retained Lab 2 run, and any marked isolated Codex home. It refuses paths whose
 canonical location, ownership marker, or symlink safety cannot be established,
 and never removes normal agent configuration or authentication state.
 

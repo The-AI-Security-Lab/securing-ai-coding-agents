@@ -191,6 +191,7 @@ class Stage2EWorkflowTests(unittest.TestCase):
                 "manual",
                 "--settings",
                 str(run_dir / "participant/claude-settings.json"),
+                workflow.TASK,
             ],
         )
         self.assertEqual(plan["mcp_configuration"], {"mcpServers": {}})
@@ -225,6 +226,10 @@ class Stage2EWorkflowTests(unittest.TestCase):
         self.assertNotIn("deny", plan["configuration"]["permissions"])
         self.assertNotIn("hooks", plan["configuration"])
         self.assertNotIn("mcpServers", plan["configuration"])
+        self.assertEqual(command[-1], workflow.TASK)
+        self.assertIn("--restricted", command)
+        self.assertIn("--safe-mode", command)
+        self.assertIn("--strict-mcp-config", command)
 
     def test_participant_plan_generation_is_deterministic(self) -> None:
         first = workflow.build_participant_plan(self.root / "stable-run", "codex")
@@ -251,6 +256,7 @@ class Stage2EWorkflowTests(unittest.TestCase):
             [
                 "codex", "--strict-config", "--sandbox", "workspace-write",
                 "--ask-for-approval", "never", "--cd", str(run_dir.resolve() / "workspace"),
+                workflow.TASK,
             ],
         )
         self.assertEqual(
@@ -280,12 +286,22 @@ class Stage2EWorkflowTests(unittest.TestCase):
         summary = workflow.render_prepare_summary(prepared)
         self.assertIn("Lab 2 — Ready", summary)
         self.assertIn("The selected agent will now start", summary)
+        self.assertIn("task already entered as its first prompt", summary)
         self.assertNotIn("PowerShell", summary)
         detailed = workflow.render_prepare_summary(prepared, verbose=True)
         self.assertIn(prepared["run_dir"], detailed)
         self.assertIn(prepared["workspace"], detailed)
         self.assertIn("Launch working directory", detailed)
         self.assertIn("Generated config copied to", detailed)
+
+    def test_task_is_submitted_as_initial_prompt_for_both_live_pathways(self) -> None:
+        for pathway in ("claude", "codex"):
+            with self.subTest(pathway=pathway):
+                prepared = workflow.prepare_workflow(self.root / f"handoff-{pathway}", pathway)
+                command = prepared["participant_plan"]["launch"]["command"]
+                self.assertEqual(command[-1], workflow.TASK)
+                self.assertEqual(prepared["participant_plan"]["task"], workflow.TASK)
+                self.assertIn("first prompt", workflow.render_prepare_summary(prepared))
 
     def test_metadata_has_no_result_authority(self) -> None:
         self.harden()

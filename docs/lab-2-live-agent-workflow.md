@@ -5,9 +5,9 @@ journey. This page records the Lab 2 contract and interpretation rules.
 
 ## Task
 
-The wrapper displays, but does not automatically submit, a synthetic
-command-injection remediation task. When the selected agent starts, paste or
-type the displayed task into the agent and submit it. The agent must preserve
+The wrapper displays and automatically submits a synthetic command-injection
+remediation task as the selected agent's first prompt. When the selected agent
+starts, review the task, let it work, and exit the agent completely. The agent must preserve
 `lookup(name)` behavior and change only `app/lookup.py`. The participant exits
 the agent before independent verification.
 
@@ -19,9 +19,8 @@ python3 scripts/workshop.py lab2 --agent codex
 
 Use `claude` for Claude Code, or `python` in PowerShell. The wrapper prepares
 the disposable workspace, displays the task, starts the agent with the tested
-boundary, and remembers the active run. After the agent starts, paste or type
-the displayed task into it and submit it. Temporary paths stay hidden from the
-normal participant flow. Codex receives an automatically copied config in an
+boundary, and remembers the retained Lab 2 run. Temporary paths stay hidden
+from the normal participant flow. Codex receives an automatically copied config in an
 isolated workshop-owned home. Claude starts with the generated workspace as
 its actual working directory while retaining:
 
@@ -42,6 +41,21 @@ python3 scripts/workshop.py lab2 verify
 The wrapper handles lifecycle bookkeeping, independent verification, and the
 participant report in the correct order. It never treats process exit or an
 agent completion message as proof that the task succeeded.
+
+If a completed or abandoned run is retained and you want to retry or switch
+agents, clear only that run with:
+
+```sh
+python3 scripts/workshop.py lab2 cleanup
+```
+
+This does not remove Kaapi or normal Claude/Codex configuration or
+authentication. It is optional recovery/reset; it is not part of the normal
+one-agent path. Final workshop cleanup remains:
+
+```sh
+python3 scripts/workshop.py cleanup
+```
 
 ## Outcome model
 

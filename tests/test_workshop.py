@@ -262,6 +262,212 @@ class WorkshopDependencyTests(unittest.TestCase):
             shutil.rmtree(run_path)
             shutil.rmtree(codex_home)
 
+    def test_lab1_participant_flags_forward_through_workshop_interface(self):
+        ready = workshop.KaapiStatus("READY", "verified", Path("managed-kaapi"))
+        with mock.patch.object(workshop, "inspect_kaapi", return_value=ready), mock.patch.object(
+            workshop.subprocess, "run", return_value=mock.Mock(returncode=0)
+        ) as run:
+            for agent in ("claude", "codex"):
+                self.assertEqual(workshop.run_lab1(agent, verbose=True), 0)
+                command = run.call_args.args[0]
+                self.assertEqual(command[-1], "--verbose")
+                self.assertNotIn("--format", command)
+
+                self.assertEqual(workshop.run_lab1(agent, evidence=True), 0)
+                command = run.call_args.args[0]
+                self.assertEqual(command[-2:], ["--format", "evidence"])
+
+    def test_lab1_participant_flags_are_accepted_by_workshop_cli(self):
+        with mock.patch.object(workshop, "run_lab1", return_value=0) as run:
+            for agent in ("claude", "codex"):
+                self.assertEqual(workshop.main(["lab1", "--agent", agent, "--verbose"]), 0)
+                run.assert_called_with(
+                    agent,
+                    workshop.DEPENDENCY_ROOT,
+                    verbose=True,
+                    evidence=False,
+                )
+                self.assertEqual(workshop.main(["lab1", "--agent", agent, "--evidence"]), 0)
+                run.assert_called_with(
+                    agent,
+                    workshop.DEPENDENCY_ROOT,
+                    verbose=False,
+                    evidence=True,
+                )
+
+    def test_completed_verified_run_is_retained_and_second_start_is_cleanly_refused(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-completed-run"
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                workshop.prepare_lab2("codex")
+                (run_path / workshop.stage2e_workflow.STAGE2E_RESULT_PATH).write_text(
+                    json.dumps({"context": workshop.stage2e_workflow.WORKFLOW_CONTEXT}),
+                    encoding="utf-8",
+                )
+                error = io.StringIO()
+                with mock.patch("sys.stderr", error):
+                    code = workshop.main(["lab2", "--agent", "claude"])
+            self.assertEqual(code, 2)
+            message = error.getvalue()
+            self.assertIn("completed Codex run", message)
+            self.assertIn("verification evidence is being retained", message)
+            self.assertIn("python3 scripts/workshop.py lab2 cleanup", message)
+            self.assertIn("python3 scripts/workshop.py lab2 --agent claude", message)
+            self.assertNotIn("Traceback", message)
+            self.assertTrue(run_path.is_dir())
+            shutil.rmtree(run_path)
+            shutil.rmtree(run_path.with_name(f".{run_path.name}-codex-home"))
+
+    def test_active_or_incomplete_run_is_cleanly_refused_without_traceback(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-active-run"
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                workshop.prepare_lab2("claude")
+                error = io.StringIO()
+                with mock.patch("sys.stderr", error):
+                    code = workshop.main(["lab2", "--agent", "codex"])
+            self.assertEqual(code, 2)
+            self.assertIn("active or incomplete Claude run", error.getvalue())
+            self.assertIn("lab2 cleanup", error.getvalue())
+            self.assertNotIn("Traceback", error.getvalue())
+            shutil.rmtree(run_path)
+
+    def test_lab2_verify_and_cleanup_no_run_are_human_readable(self):
+        with tempfile.TemporaryDirectory() as repository_temp:
+            repository = Path(repository_temp)
+            error = io.StringIO()
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch(
+                "sys.stderr", error
+            ):
+                verify_code = workshop.main(["lab2", "verify"])
+            self.assertEqual(verify_code, 2)
+            self.assertIn("no retained Lab 2 run", error.getvalue())
+            self.assertNotIn("Traceback", error.getvalue())
+
+            output = io.StringIO()
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch(
+                "sys.stdout", output
+            ):
+                cleanup_code = workshop.main(["lab2", "cleanup"])
+            self.assertEqual(cleanup_code, 0)
+            self.assertIn("No retained Lab 2 run found", output.getvalue())
+            self.assertIn("Nothing was removed", output.getvalue())
+
+    def test_lab2_cleanup_removes_only_verified_lab2_state_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-cleanup-only-run"
+            normal_codex = Path(run_temp) / "normal-codex"
+            normal_claude = Path(run_temp) / "normal-claude"
+            normal_codex.mkdir()
+            normal_claude.mkdir()
+            (normal_codex / "auth.json").write_text("preserve", encoding="utf-8")
+            (normal_claude / "session.json").write_text("preserve", encoding="utf-8")
+            kaapi = repository / ".workshop-deps" / "kaapi"
+            kaapi.mkdir(parents=True)
+            (kaapi / "keep.txt").write_text("preserve", encoding="utf-8")
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                prepared = workshop.prepare_lab2("codex")
+                codex_home = Path(prepared["participant_plan"]["codex_home"])
+                code, output = workshop.cleanup_lab2(verbose=True)
+                self.assertEqual(code, 0)
+                self.assertIn("Retained Lab 2 run, workspace, and evidence removed", output)
+                self.assertIn("Temporary Codex workshop configuration removed", output)
+                self.assertFalse(run_path.exists())
+                self.assertFalse(codex_home.exists())
+                self.assertFalse((repository / ".workshop-state" / "active-lab2.json").exists())
+                self.assertTrue((kaapi / "keep.txt").exists())
+                self.assertTrue((normal_codex / "auth.json").exists())
+                self.assertTrue((normal_claude / "session.json").exists())
+
+                code, repeated = workshop.cleanup_lab2()
+                self.assertEqual(code, 0)
+                self.assertIn("No retained Lab 2 run found", repeated)
+
+    def test_lab2_cleanup_rejects_symlinked_run_without_touching_target(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-symlink-cleanup-run"
+            outside = Path(run_temp) / "outside"
+            outside.mkdir()
+            (outside / "keep.txt").write_text("keep", encoding="utf-8")
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                workshop.prepare_lab2("claude")
+                real_run = run_path.with_name("real-run")
+                run_path.rename(real_run)
+                run_path.symlink_to(real_run, target_is_directory=True)
+                code, output = workshop.cleanup_lab2()
+            self.assertEqual(code, 1)
+            self.assertIn("symlinked", output)
+            self.assertTrue((outside / "keep.txt").exists())
+            self.assertTrue(real_run.is_dir())
+            self.assertTrue((repository / ".workshop-state" / "active-lab2.json").exists())
+            shutil.rmtree(real_run)
+
+    def test_lab2_cleanup_rejects_outside_run_and_symlinked_codex_home(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            run_path = Path(run_temp) / "stage2e-unsafe-run"
+            outside_run = Path(repo_temp) / "outside-run"
+            outside_run.mkdir()
+            outside_keep = outside_run / "keep.txt"
+            outside_keep.write_text("keep", encoding="utf-8")
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", return_value=run_path
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                workshop.prepare_lab2("codex")
+                state_path = repository / ".workshop-state" / "active-lab2.json"
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+                canonical_run = state["run_dir"]
+                state["run_dir"] = str(outside_run)
+                workshop._write_state(state_path, state)
+                code, output = workshop.cleanup_lab2()
+                self.assertEqual(code, 1)
+                self.assertIn("canonical directory", output)
+                self.assertTrue(outside_keep.exists())
+                self.assertTrue(state_path.exists())
+
+                state["run_dir"] = canonical_run
+                workshop._write_state(state_path, state)
+                codex_home = Path(state["codex_home"])
+                real_home = codex_home.with_name("real-codex-home")
+                codex_home.rename(real_home)
+                codex_home.symlink_to(real_home, target_is_directory=True)
+                code, output = workshop.cleanup_lab2()
+            self.assertEqual(code, 1)
+            self.assertIn("symlinked", output)
+            self.assertTrue(outside_keep.exists())
+            self.assertTrue(real_home.is_dir())
+            self.assertTrue((repository / ".workshop-state" / "active-lab2.json").exists())
+            shutil.rmtree(run_path)
+            shutil.rmtree(real_home)
+
+    def test_lab2_cleanup_allows_a_new_run_after_reset(self):
+        with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
+            repository = Path(repo_temp)
+            first = Path(run_temp) / "stage2e-first-reset-run"
+            second = Path(run_temp) / "stage2e-second-reset-run"
+            with mock.patch.object(workshop, "REPO_ROOT", repository), mock.patch.object(
+                workshop.stage2e_workflow, "new_run_dir", side_effect=[first, second]
+            ), mock.patch.object(workshop.tempfile, "gettempdir", return_value=run_temp):
+                workshop.prepare_lab2("codex")
+                code, _ = workshop.cleanup_lab2()
+                self.assertEqual(code, 0)
+                prepared = workshop.prepare_lab2("claude")
+                self.assertEqual(Path(prepared["run_dir"]), second.resolve())
+                code, _ = workshop.cleanup_lab2()
+                self.assertEqual(code, 0)
+
     def test_cleanup_dry_run_and_verbose_are_non_destructive_then_cleanup_is_idempotent(self):
         with tempfile.TemporaryDirectory() as repo_temp, tempfile.TemporaryDirectory() as run_temp:
             repository = Path(repo_temp)

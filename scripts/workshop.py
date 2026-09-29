@@ -243,7 +243,13 @@ def setup_kaapi(dependency_root: Path = DEPENDENCY_ROOT) -> KaapiStatus:
             shutil.rmtree(staging)
 
 
-def run_lab1(agent: str, dependency_root: Path = DEPENDENCY_ROOT) -> int:
+def run_lab1(
+    agent: str,
+    dependency_root: Path = DEPENDENCY_ROOT,
+    *,
+    verbose: bool = False,
+    evidence: bool = False,
+) -> int:
     status = inspect_kaapi(dependency_root)
     if not status.ready:
         print(f"Workshop Kaapi is not ready: {status.detail}", file=sys.stderr)
@@ -253,8 +259,13 @@ def run_lab1(agent: str, dependency_root: Path = DEPENDENCY_ROOT) -> int:
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     env["PYTHONPATH"] = str(status.root)
+    command = [str(python), "-B", str(REPO_ROOT / "scripts" / "lab1.py"), "--agent", agent]
+    if evidence:
+        command.extend(["--format", "evidence"])
+    elif verbose:
+        command.append("--verbose")
     result = subprocess.run(
-        [str(python), "-B", str(REPO_ROOT / "scripts" / "lab1.py"), "--agent", agent],
+        command,
         cwd=REPO_ROOT,
         env=env,
         check=False,
@@ -270,17 +281,19 @@ def _write_state(path: Path, value: dict[str, object]) -> None:
 def _load_active_lab2_state() -> dict[str, object]:
     state_path = _canonical_state_path()
     if state_path.is_symlink() or not state_path.is_file():
-        raise ValueError("no active Lab 2 run is recorded; run workshop.py lab2 --agent first")
+        raise ValueError(
+            "no retained Lab 2 run is recorded; run workshop.py lab2 --agent first"
+        )
     try:
         value = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"active Lab 2 state is unreadable: {exc}") from exc
+        raise ValueError(f"retained Lab 2 state is unreadable: {exc}") from exc
     if not isinstance(value, dict) or value.get("schema_version") != WORKSHOP_STATE_SCHEMA_VERSION:
-        raise ValueError("active Lab 2 state is invalid; run cleanup and prepare a new Lab 2 run")
+        raise ValueError("retained Lab 2 state is invalid; run lab2 cleanup and prepare a new Lab 2 run")
     if value.get("context") != "participant-self-service":
-        raise ValueError("active Lab 2 state has an unexpected context")
+        raise ValueError("retained Lab 2 state has an unexpected context")
     if value.get("repository") != str(REPO_ROOT.resolve()):
-        raise ValueError("active Lab 2 state belongs to a different workshop checkout")
+        raise ValueError("retained Lab 2 state belongs to a different workshop checkout")
     return value
 
 
@@ -288,14 +301,22 @@ def _owned_directory(path: Path, *, label: str) -> Path:
     path = path.expanduser().absolute()
     if path.is_symlink() or not path.is_dir():
         raise ValueError(f"{label} is missing or symlinked: {path}")
+    resolved = path.resolve(strict=True)
+    if resolved != path:
+        raise ValueError(f"{label} is not a canonical directory: {path}")
     return path
 
 
 def _validate_owned_lab2_state(state: dict[str, object]) -> tuple[Path, Path | None]:
     run_value = state.get("run_dir")
     if not isinstance(run_value, str):
-        raise ValueError("active Lab 2 state has no run directory")
+        raise ValueError("retained Lab 2 state has no run directory")
     run_dir = _owned_directory(Path(run_value), label="Lab 2 run directory")
+    temporary_root = Path(tempfile.gettempdir()).resolve()
+    if run_dir.parent != temporary_root or not run_dir.name.startswith("stage2e-"):
+        raise ValueError(
+            f"Lab 2 run directory is not the canonical workshop temp location: {run_dir}"
+        )
     workflow = stage2e_workflow._load_workflow(run_dir)
     if workflow.get("context") != stage2e_workflow.WORKFLOW_CONTEXT:
         raise ValueError(f"Lab 2 run has unexpected workflow context: {run_dir}")
@@ -305,11 +326,18 @@ def _validate_owned_lab2_state(state: dict[str, object]) -> tuple[Path, Path | N
         raise ValueError(f"Lab 2 workspace identity is invalid: {run_dir}")
     _owned_directory(run_dir / "workspace", label="Lab 2 workspace")
     codex_value = state.get("codex_home")
+    if state.get("pathway") == "codex" and codex_value is None:
+        raise ValueError("Codex Lab 2 state has no isolated Codex home")
+    if state.get("pathway") != "codex" and codex_value is not None:
+        raise ValueError("non-Codex Lab 2 state unexpectedly names an isolated Codex home")
     if codex_value is None:
         return run_dir, None
     if not isinstance(codex_value, str):
-        raise ValueError("active Codex home path is invalid")
+        raise ValueError("retained isolated Codex home path is invalid")
     codex_home = _owned_directory(Path(codex_value), label="isolated Codex home")
+    expected_home = run_dir.parent / f".{run_dir.name}-codex-home"
+    if codex_home != expected_home:
+        raise ValueError(f"isolated Codex home is not the canonical workshop sibling: {codex_home}")
     marker = codex_home / stage2e_workflow.CODEX_HOME_MARKER
     if marker.is_symlink() or not marker.is_file():
         raise ValueError(f"isolated Codex home has no ownership marker: {codex_home}")
@@ -329,18 +357,82 @@ def _validate_owned_lab2_state(state: dict[str, object]) -> tuple[Path, Path | N
     return run_dir, codex_home
 
 
+def _lab2_state_status(state: dict[str, object], run_dir: Path) -> str:
+    """Classify retained state without treating completed evidence as active."""
+
+    metadata = stage2e_workflow._load_workflow(run_dir)
+    result_path = run_dir / stage2e_workflow.STAGE2E_RESULT_PATH
+    if result_path.is_symlink() or (result_path.exists() and not result_path.is_file()):
+        raise ValueError("retained Lab 2 verification evidence is not a regular file")
+    if result_path.is_file():
+        result = stage2e_workflow._load_json(result_path)
+        if not isinstance(result, dict) or result.get("context") != stage2e_workflow.WORKFLOW_CONTEXT:
+            raise ValueError("retained Lab 2 verification evidence is inconsistent")
+        return "completed/verified"
+    if metadata.get("exit_state") in {"active", "not-started", "unknown"}:
+        return "active/incomplete"
+    if metadata.get("exit_state") == "exited":
+        return "completed/awaiting verification"
+    return "abandoned/incomplete"
+
+
+def _lab2_agent_label(state: dict[str, object]) -> str:
+    return {"claude": "Claude", "codex": "Codex"}.get(
+        str(state.get("pathway")), "selected-agent"
+    )
+
+
+def _lab2_retry_message(state: dict[str, object], status: str, requested_agent: str) -> str:
+    agent = _lab2_agent_label(state)
+    cleanup = _participant_command("lab2 cleanup")
+    start = _participant_command(f"lab2 --agent {requested_agent}")
+    if status == "completed/verified":
+        return (
+            f"Lab 2 already has a completed {agent} run.\n\n"
+            "Its verification evidence is being retained.\n\n"
+            "To clear only the previous Lab 2 run and start another:\n\n"
+            f"  {cleanup}\n\n"
+            f"Then run the desired agent command, for example:\n\n"
+            f"  {start}"
+        )
+    if status == "completed/awaiting verification":
+        return (
+            f"Lab 2 already has a completed {agent} agent run awaiting independent verification.\n\n"
+            "Exit the agent completely, then run:\n\n"
+            f"  {_participant_command('lab2 verify')}\n\n"
+            "To discard only this retained run and retry instead:\n\n"
+            f"  {cleanup}"
+        )
+    if status == "active/incomplete":
+        return (
+            f"Lab 2 already has an active or incomplete {agent} run.\n\n"
+            "If the coding agent is still open, exit it completely. Then clear only\n"
+            "the retained Lab 2 state before retrying:\n\n"
+            f"  {cleanup}"
+        )
+    return (
+        f"Lab 2 has an abandoned or incomplete {agent} run.\n\n"
+        "No verification result was used. Clear only that retained Lab 2 state\n"
+        "before retrying:\n\n"
+        f"  {cleanup}"
+    )
+
+
 def prepare_lab2(agent: str, *, verbose: bool = False) -> dict[str, object]:
     """Prepare one owned Lab 2 run and remember it without exposing its ID."""
 
     state_path = _canonical_state_path()
     if state_path.exists() or state_path.is_symlink():
         try:
-            _load_active_lab2_state()
+            state = _load_active_lab2_state()
+            run_dir, _ = _validate_owned_lab2_state(state)
+            status = _lab2_state_status(state, run_dir)
         except ValueError as exc:
             raise ValueError(
-                f"an active Lab 2 state is present but unsafe: {exc}; run cleanup --verbose to inspect it"
+                f"retained Lab 2 state is unsafe or inconsistent: {exc}; "
+                "run workshop.py cleanup --verbose to inspect it"
             ) from exc
-        raise ValueError("a Lab 2 run is already active; exit it, verify it, or run cleanup")
+        raise ValueError(_lab2_retry_message(state, status, agent))
     run_dir = stage2e_workflow.new_run_dir()
     prepared = stage2e_workflow.prepare_workflow(run_dir, agent)
     plan = prepared["participant_plan"]
@@ -352,6 +444,7 @@ def prepare_lab2(agent: str, *, verbose: bool = False) -> dict[str, object]:
         "workspace": prepared["workspace"],
         "pathway": agent,
         "codex_home": plan.get("codex_home"),
+        "lifecycle": "prepared",
     }
     _write_state(state_path, state)
     return prepared
@@ -360,18 +453,28 @@ def prepare_lab2(agent: str, *, verbose: bool = False) -> dict[str, object]:
 def start_lab2(agent: str, *, verbose: bool = False) -> int:
     prepared = prepare_lab2(agent, verbose=verbose)
     print(stage2e_workflow.render_prepare_summary(prepared, verbose=verbose))
-    print("\nTask to give the selected agent:\n")
+    print("\nThe task below will be submitted automatically as the agent's first prompt:\n")
     print(prepared["participant_plan"]["task"])
-    print("\nStarting the selected coding agent. Read the task, complete it, then exit the agent.")
+    print(
+        "\nWhen the agent opens: review the task, let it complete the remediation, "
+        "then exit the agent completely."
+    )
     metadata = stage2e_workflow.launch_workflow(Path(prepared["run_dir"]))
+    state_path = _canonical_state_path()
+    state = _load_active_lab2_state()
     if metadata.get("exit_state") == "exited":
+        state.update({"lifecycle": "agent-exited", "process_exit_code": metadata.get("process_exit_code")})
+        _write_state(state_path, state)
         print("\nThe agent process exited; task success is not established by exit alone.")
         print("Next action: run the independent verification command shown below.")
         print("  " + _participant_command("lab2 verify", verbose=verbose))
         return 0
+    state.update({"lifecycle": "launch-failed"})
+    _write_state(state_path, state)
     print(
-        "\nThe selected agent could not complete a recorded lifecycle exit. "
-        "Review the message, then use cleanup or retry after resolving it.",
+        "\nThe selected agent could not be started or did not complete a recorded lifecycle exit. "
+        "No independent verification result is available.\n"
+        f"To remove only this Lab 2 state, run {_participant_command('lab2 cleanup')}.",
         file=sys.stderr,
     )
     return 1
@@ -387,6 +490,9 @@ def verify_lab2(*, verbose: bool = False, evidence: bool = False) -> int:
             "if it is still running, exit it first"
         )
     result = stage2e_workflow.verify_workflow(run_dir)
+    state["lifecycle"] = "completed/verified"
+    state["verification_overall"] = result.get("overall")
+    _write_state(_canonical_state_path(), state)
     if evidence:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:
@@ -394,6 +500,69 @@ def verify_lab2(*, verbose: bool = False, evidence: bool = False) -> int:
         if verbose:
             print(f"\nDetailed evidence: {run_dir / stage2e_workflow.STAGE2E_RESULT_PATH}")
     return 0 if result.get("overall") == stage2e_workflow.lab2_harness.PASS else 1
+
+
+def cleanup_lab2(*, dry_run: bool = False, verbose: bool = False) -> tuple[int, str]:
+    """Remove only the provenance-verified retained Lab 2 state."""
+
+    lines = ["Lab 2 Cleanup", ""]
+    try:
+        state_path = _canonical_state_path()
+    except (OSError, ValueError) as exc:
+        return 1, f"Lab 2 Cleanup\n\n✗ Cleanup refused: {exc}\n\nNothing was removed."
+    if not state_path.exists() and not state_path.is_symlink():
+        return 0, "Lab 2 Cleanup\n\n○ No retained Lab 2 run found.\n\nNothing was removed."
+    try:
+        state = _load_active_lab2_state()
+        run_dir, codex_home = _validate_owned_lab2_state(state)
+        targets = [run_dir] + ([codex_home] if codex_home is not None else [])
+    except (OSError, ValueError) as exc:
+        lines.extend(
+            [
+                f"✗ Cleanup refused: {exc}",
+                "Nothing was removed because Lab 2 ownership or safety could not be established.",
+                "Inspect the exact retained path; do not broaden the cleanup target.",
+            ]
+        )
+        return 1, "\n".join(lines)
+
+    if dry_run:
+        lines.append("○ Retained Lab 2 state would be removed")
+    else:
+        removed_targets: list[Path] = []
+        try:
+            for path in targets:
+                shutil.rmtree(path)
+                removed_targets.append(path)
+            state_path.unlink()
+        except OSError as exc:
+            lines.extend(
+                [
+                    f"✗ Cleanup stopped: {exc}",
+                    "Cleanup may be incomplete; the Lab 2 state marker was preserved.",
+                    "Removed before the failure: "
+                    + (", ".join(str(path) for path in removed_targets) if removed_targets else "none"),
+                ]
+            )
+            return 1, "\n".join(lines)
+        lines.append("✓ Retained Lab 2 run, workspace, and evidence removed")
+        if codex_home is not None:
+            lines.append("✓ Temporary Codex workshop configuration removed")
+    lines.extend(
+        [
+            "",
+            "Not touched:",
+            "  Workshop-managed Kaapi",
+            "  Your normal Codex configuration or authentication/session state",
+            "  Your normal Claude configuration or authentication/session state",
+        ]
+    )
+    if verbose:
+        lines.extend(["", "Owned paths:"])
+        lines.extend(f"  {path}" for path in targets)
+        lines.append(f"  {state_path}")
+    lines.extend(["", f"LAB 2 CLEANUP: {'DRY RUN' if dry_run else 'COMPLETE'}"])
+    return 0, "\n".join(lines)
 
 
 def _participant_command(value: str, *, verbose: bool = False) -> str:
@@ -572,7 +741,7 @@ def cleanup_workshop(*, dry_run: bool = False, verbose: bool = False) -> tuple[i
     return (1 if failure else 0), "\n".join(lines)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--dependency-root",
@@ -589,14 +758,29 @@ def main() -> int:
     cleanup.add_argument("--verbose", action="store_true", help="show exact discovered and preserved paths")
     lab1 = subparsers.add_parser("lab1", help="run Lab 1 with workshop-managed Kaapi")
     lab1.add_argument("--agent", choices=("claude", "codex"), required=True)
+    lab1.add_argument(
+        "--verbose",
+        action="store_true",
+        help="show detailed human-readable configuration evidence",
+    )
+    lab1.add_argument(
+        "--evidence",
+        action="store_true",
+        help="show detailed machine-readable configuration evidence",
+    )
     lab2 = subparsers.add_parser("lab2", help="run the participant-facing Lab 2 workflow")
     lab2.add_argument("--agent", choices=("claude", "codex"))
     lab2.add_argument("--verbose", action="store_true", help="show exact generated paths and launch details")
     lab2_subparsers = lab2.add_subparsers(dest="lab2_command")
-    lab2_verify = lab2_subparsers.add_parser("verify", help="independently verify the active Lab 2 run")
+    lab2_verify = lab2_subparsers.add_parser("verify", help="independently verify the retained Lab 2 run")
     lab2_verify.add_argument("--verbose", action="store_true", help="show the exact evidence path")
     lab2_verify.add_argument("--evidence", action="store_true", help="print machine-readable evidence JSON")
-    args = parser.parse_args()
+    lab2_cleanup = lab2_subparsers.add_parser(
+        "cleanup", help="remove only retained Lab 2 workshop state"
+    )
+    lab2_cleanup.add_argument("--dry-run", action="store_true", help="show owned Lab 2 paths without removing them")
+    lab2_cleanup.add_argument("--verbose", action="store_true", help="show exact owned Lab 2 paths")
+    args = parser.parse_args(argv)
     dependency_root = args.dependency_root or DEPENDENCY_ROOT
     if args.command == "setup":
         status = setup_kaapi(dependency_root)
@@ -614,11 +798,34 @@ def main() -> int:
             try:
                 return verify_lab2(verbose=args.verbose, evidence=args.evidence)
             except (OSError, ValueError) as exc:
-                parser.error(str(exc))
+                print(
+                    "Lab 2 verification unavailable\n\n"
+                    f"✗ {exc}\n\n"
+                    "No verification result was produced. Follow the recovery command above, "
+                    "or exit the selected agent completely and retry verification.",
+                    file=sys.stderr,
+                )
+                return 2
+        if args.lab2_command == "cleanup":
+            code, output = cleanup_lab2(
+                dry_run=args.dry_run,
+                verbose=args.verbose,
+            )
+            print(output)
+            return code
         if args.agent is None:
-            parser.error("lab2 requires --agent claude or --agent codex")
-        return start_lab2(args.agent, verbose=args.verbose)
-    return run_lab1(args.agent, dependency_root)
+            print(
+                "Lab 2 requires --agent claude or --agent codex.\n"
+                "Run: python3 scripts/workshop.py lab2 --agent codex",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            return start_lab2(args.agent, verbose=args.verbose)
+        except (OSError, ValueError) as exc:
+            print(f"Lab 2 could not start\n\n✗ {exc}", file=sys.stderr)
+            return 2
+    return run_lab1(args.agent, dependency_root, verbose=args.verbose, evidence=args.evidence)
 
 
 if __name__ == "__main__":

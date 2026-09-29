@@ -1,10 +1,13 @@
 import json
+import io
 import os
 import shutil
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 from scripts.kaapi_consumer import (
     CONFIGURED_AUTHORITY,
@@ -23,6 +26,7 @@ from scripts.lab1 import (
     selected_cases,
     _human_result,
 )
+from scripts import lab1 as lab1_module
 
 
 KAAPI_P21_SOURCE = os.environ.get("KAAPI_P21_SOURCE")
@@ -124,6 +128,44 @@ class Lab1Tests(unittest.TestCase):
         self.assertIn("fixtures/lab1/codex/risky/config.toml", rendered)
         self.assertIn("Configuration exceeds the declared security baseline", rendered)
         self.assertIn("Inspect the file, then compare", result["teaching_question"])
+
+    def test_participant_cli_keeps_concise_default_for_both_agents(self) -> None:
+        result = {
+            "case": "hardened",
+            "fixture": "fixtures/lab1/synthetic/config",
+            "configuration_baseline": PASS,
+        }
+        for agent in ("claude", "codex"):
+            with self.subTest(agent=agent), mock.patch.object(
+                lab1_module, "assess_selected_agent", return_value=[result]
+            ), mock.patch("sys.argv", ["lab1.py", "--agent", agent]):
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    self.assertEqual(lab1_module.main(), 0)
+                self.assertIn("Lab 1 — Configuration Assessment", output.getvalue())
+                self.assertNotIn("Detailed configuration evidence", output.getvalue())
+
+    def test_participant_cli_verbose_and_evidence_work_for_both_agents(self) -> None:
+        result = {
+            "case": "hardened",
+            "fixture": "fixtures/lab1/synthetic/config",
+            "configuration_baseline": PASS,
+            "formal_result": {"synthetic": True},
+        }
+        for agent in ("claude", "codex"):
+            with self.subTest(agent=agent), mock.patch.object(
+                lab1_module, "assess_selected_agent", return_value=[result]
+            ):
+                with mock.patch("sys.argv", ["lab1.py", "--agent", agent, "--verbose"]):
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        self.assertEqual(lab1_module.main(), 0)
+                    self.assertIn("Detailed configuration evidence", output.getvalue())
+                with mock.patch("sys.argv", ["lab1.py", "--agent", agent, "--format", "evidence"]):
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        self.assertEqual(lab1_module.main(), 0)
+                    self.assertIn('"formal_result"', output.getvalue())
 
     @unittest.skipUnless(
         KAAPI_P21_SOURCE,

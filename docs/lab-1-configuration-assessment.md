@@ -52,11 +52,15 @@ runtime behavior. `FAIL` means the declared baseline was not met. `NOT TESTED`
 means the configuration could not be safely assessed. `INCONCLUSIVE` means the
 evidence is insufficient for a supported conclusion.
 
-Detailed evidence remains available with:
+Additional detail remains available through the participant interface:
 
 ```sh
-python3 scripts/lab1.py --agent codex --format evidence
+python3 scripts/workshop.py lab1 --agent codex --verbose
+python3 scripts/workshop.py lab1 --agent codex --evidence
 ```
+
+Replace `codex` with `claude` as needed. Normal participants should not need
+to invoke the lower-level `scripts/lab1.py` runner.
 
 An optional custom configuration assessment is deferred from this bounded pass.
 Real configuration files may expose internal paths, URLs, MCP names, or other

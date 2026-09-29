@@ -115,12 +115,21 @@ proof. `FAIL` means the declared baseline was not met. `NOT TESTED` means the
 configuration could not be safely assessed. `INCONCLUSIVE` means the evidence
 was insufficient for a supported conclusion.
 
-For detailed Kaapi evidence, run the underlying assessment with its explicit
-evidence option:
+For additional human-readable configuration detail, use:
 
 ```sh
-python3 scripts/lab1.py --agent codex --format evidence
+python3 scripts/workshop.py lab1 --agent codex --verbose
 ```
+
+For detailed machine-readable evidence, use the participant interface:
+
+```sh
+python3 scripts/workshop.py lab1 --agent codex --evidence
+```
+
+Replace `codex` with `claude` as needed. The lower-level `scripts/lab1.py`
+runner is an implementation detail; normal participants should use
+`scripts/workshop.py`.
 
 Do not point the required path at your real configuration; it can contain
 internal paths, URLs, or MCP names.
@@ -161,11 +170,11 @@ python scripts/workshop.py lab2 --agent codex
 ```
 
 Replace `codex` with `claude`. The wrapper displays the exact synthetic task
-before starting the agent; it does not submit the task to the agent for you.
-When the agent starts, paste or type the displayed task into the agent and
-submit it. Let the agent attempt the defined remediation, review its
-completion message, and exit the agent completely. Do not ask it to claim
-that independent verification passed.
+and submits it automatically as the selected agent's first prompt. When the
+agent opens, review that task, let the agent attempt the defined remediation,
+review its completion message, and exit the agent completely. You do not need
+to know `task.txt`, `participant/`, the temporary run ID, or any internal
+path. Do not ask it to claim that independent verification passed.
 
 The wrapper preserves Codex isolation underneath by copying the generated
 configuration into a temporary workshop-owned Codex home. It never changes
@@ -187,7 +196,7 @@ PowerShell:
 python scripts/workshop.py lab2 verify
 ```
 
-The wrapper remembers the active run and internally performs the required
+The wrapper remembers the retained run and internally performs the required
 record, independent verification, and report steps. You do not copy a run ID
 or run lower-level workflow commands.
 
@@ -250,11 +259,23 @@ PowerShell:
 python scripts/workshop.py cleanup
 ```
 
-This removes verified workshop-managed Kaapi state, the active Lab 2 workspace
+This removes verified workshop-managed Kaapi state, the retained Lab 2 workspace
 and evidence, and the temporary isolated Codex workshop home. It deliberately
 preserves your normal Codex configuration, normal Claude configuration, and
 authentication/session data. It never searches arbitrary temporary folders or
 uses a broad cleanup glob. Local cleanup is not proof of server-side token/session revocation.
+
+If you need to retry Lab 2 or switch agents after a run has exited or been
+verified, use the Lab 2-only reset instead:
+
+```sh
+python3 scripts/workshop.py lab2 cleanup
+```
+
+This removes only the provenance-verified retained Lab 2 run, workspace,
+evidence, and isolated workshop-owned agent state for that run. It does not
+remove Kaapi or normal Claude/Codex configuration or authentication. It is a
+recovery/retry operation, not part of the normal one-agent happy path.
 
 To inspect exact ownership decisions without deleting anything:
 
@@ -292,18 +313,47 @@ kernel telemetry, or Codex read confidentiality outside the workspace.
 - **Authentication is unavailable:** stop the live path and use the
   instructor-led fallback; never place tokens, device codes, or auth files in
   the repository.
-- **The agent says it cannot edit:** do not bypass the tested restriction.
-  Exit the agent, inspect the lifecycle message, and preserve the independent
-  result as `FAIL` or `INCONCLUSIVE` as appropriate.
-- **Verification says no active run or the agent is still active:** use the
-  exact recovery message; exit the selected agent completely before retrying
-  verification.
+- **A Lab 2 run already exists:** a previous run or its verification evidence
+  may intentionally be retained. To retry, test the other agent, or start
+  another Lab 2 attempt, run:
+
+  ```sh
+  python3 scripts/workshop.py lab2 cleanup
+  python3 scripts/workshop.py lab2 --agent claude
+  ```
+
+  Replace `claude` with `codex` as needed. Lab 2 cleanup removes only safely
+  identified Lab 2 workshop state; it does not remove Kaapi or normal agent
+  configuration/authentication. It is not required on the normal path.
+- **Verification says no Lab 2 run exists:** no retained run is available to
+  verify. Start one with `python3 scripts/workshop.py lab2 --agent claude` or
+  `--agent codex`.
+- **The agent is still active:** exit the selected agent completely, then run
+  `python3 scripts/workshop.py lab2 verify`. Verification is never run while
+  the lifecycle is active.
+- **The agent did not complete the task:** if it refuses the edit, encounters
+  a restriction, reports failure, exits without the remediation, or claims
+  success and you are unsure, still exit it completely and run
+  `python3 scripts/workshop.py lab2 verify`. Do not manually repair the
+  workspace or bypass the tested restriction; independent verification owns
+  the defined security and scope result.
+- **No Lab 2 state exists for cleanup:**
+  `python3 scripts/workshop.py lab2 cleanup` reports that no retained run was
+  found and removes nothing. Start Lab 2 normally if you want another attempt.
+- **Difference between cleanup commands:**
+  `python3 scripts/workshop.py lab2 cleanup` resets only retained Lab 2 state
+  so Lab 2 can be retried or another agent can be used. The final
+  `python3 scripts/workshop.py cleanup` removes all safely attributable
+  workshop-managed state, including Kaapi and Lab 2 state, after you are
+  finished. The two commands are not both mandatory.
 - **An unexpected final-state path appears:** preserve it and follow
   `Detect → Explain → Classify → Decide → Fix / Explicitly Allow`. Do not
   whitelist or delete it first.
 - **Cleanup refuses a path:** use `cleanup --verbose` or
   `cleanup --dry-run --verbose`, inspect the exact reported path, and do not
-  broaden the cleanup target.
+  broaden the cleanup target. If `lab2 cleanup` refuses a path, preserve it
+  and inspect the exact ownership/safety message; do not use broad `rm` or
+  glob commands to force cleanup.
 - **Windows behavior differs:** use the PowerShell command for the current
   step. Complete Windows live-agent acceptance remains a documented
   limitation; use the instructor-led fallback if needed.
