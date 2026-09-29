@@ -139,71 +139,85 @@ internal paths, URLs, or MCP names.
 What you are doing: giving one selected agent a synthetic remediation task,
 then checking the final workspace independently. Only `app/lookup.py` may change.
 
-The tested boundaries remain version-specific:
+The tested boundaries remain version-specific. The workshop wrapper does not
+simply launch a normal unrestricted agent session; it creates the controlled
+Lab 2 workspace and supplies the selected agent's tested configuration.
 
-- Codex: `workspace-write` with approval `never`.
-- Claude Code: `--restricted`, `--safe-mode`, `--strict-mcp-config`, an empty
-  MCP configuration, tools `Bash,Read,Edit,Write`, manual permission mode, and
-  the generated fail-closed sandbox/filesystem settings.
+- **Codex:** workspace-write sandboxing, approval set to `never`, an isolated
+  temporary `CODEX_HOME` containing the workshop configuration, and
+  web-search access disabled via `web_search = "disabled"` for the exercise.
+- **Claude Code:** the generated Lab 2 workspace as the working directory,
+  restricted and safe modes, strict MCP handling with an empty generated MCP
+  configuration, bounded `Bash,Read,Edit,Write` tools, manual permission mode,
+  and generated fail-closed sandbox/filesystem settings.
+
+Operationally, sandbox and filesystem controls constrain where the exercise
+permits writes; approval and permission controls define an approval/decision
+boundary; and MCP, tool, and configuration controls bound the capabilities
+available to the session. These are configured authority: they describe what
+authority we intended to give the agent, not observed runtime behavior or a
+secure result.
 
 Approval is a decision boundary, not automatically hard isolation. Codex's
 tested profile does not establish read confidentiality outside the workspace.
 Bytecode hygiene is not security isolation.
 
+### Key controls the wrapper applies
+
+These selected implementation-backed CLI options are shown to help explain the
+configured security boundary. They are not commands for participants to
+execute themselves; use the `scripts/workshop.py` command below.
+
+- **Codex**
+  - `--strict-config`
+  - `--sandbox workspace-write`
+  - `--ask-for-approval never`
+  - `--cd <generated Lab 2 workspace>`
+- **Claude Code**
+  - `--restricted`
+  - `--safe-mode`
+  - `--strict-mcp-config`
+  - `--mcp-config <generated empty MCP file>`
+  - `--tools Bash,Read,Edit,Write`
+  - `--permission-mode manual`
+  - `--settings <generated settings file>`
+
+The wrapper supplies the remaining generated configuration, temporary paths,
+isolated Codex `CODEX_HOME`, and other workshop-owned state. Lab 2 therefore
+still performs independent verification: configured authority does not prove
+the agent's observed behavior or that its resulting code is secure.
+
 ### Start Lab 2
 
-Run one command from the workshop repository. The wrapper prepares the
-disposable workspace, creates the selected agent's tested configuration, starts
-the agent in the correct workspace, and keeps the temporary paths out of the
-normal participant flow.
+Run one of these supported commands from the workshop repository. The wrapper
+prepares the disposable workspace, creates the selected agent's tested
+configuration, starts the agent in the correct workspace, and keeps the
+temporary paths out of the normal participant flow.
 
 macOS/shell:
-
-```sh
-python3 scripts/workshop.py lab2 --agent codex
-```
-
-Windows/PowerShell:
-
-```powershell
-python scripts/workshop.py lab2 --agent codex
-```
-
-Replace `codex` with `claude`. The wrapper displays the exact synthetic task
-and submits it automatically as the selected agent's first prompt. When the
-agent opens, review that task, let the agent attempt the defined remediation,
-review its completion message, and exit the agent completely. You do not need
-to know `task.txt`, `participant/`, the temporary run ID, or any internal
-path. Do not ask it to claim that independent verification passed.
-
-### What the workshop configures for you
-
-The wrapper does more than launch your normal coding-agent session. It creates
-the workshop-controlled Lab 2 workspace and invokes the selected agent with
-the tested workshop boundary. Choose one participant path:
 
 ```sh
 python3 scripts/workshop.py lab2 --agent codex
 python3 scripts/workshop.py lab2 --agent claude
 ```
 
-Do not manually recreate the invocation. Under the hood, the implementation
-backs these controls:
+Windows/PowerShell:
 
-- **Codex:** workspace-write sandboxing, workshop-defined approval behavior
-  (`--ask-for-approval never`), an isolated temporary `CODEX_HOME` containing
-  the workshop configuration, and `web_search = "disabled"` for the exercise.
-- **Claude Code:** the generated Lab 2 workspace as the working directory,
-  `--restricted`, `--safe-mode`, `--strict-mcp-config`, an empty generated MCP
-  configuration, the bounded `Bash,Read,Edit,Write` tool set, manual permission
-  mode, and generated fail-closed sandbox/filesystem settings.
+```powershell
+python scripts/workshop.py lab2 --agent codex
+python scripts/workshop.py lab2 --agent claude
+```
 
-Configured authority tells us what authority we intended to give the agent. It
-does not prove observed runtime behavior or an independently verified outcome;
-that is why Lab 2 still performs independent verification. The generated
-workshop configuration does not replace or modify your normal Codex/Claude
-configuration or authentication state. For debugging only, add `--verbose` to
-the wrapper command to see launch details.
+Choose one command; do not run both. The wrapper displays the exact synthetic
+task and submits it automatically as the selected agent's first prompt. When
+the agent opens, review that task, let the agent attempt the defined
+remediation, review its completion message, and exit the agent completely. You
+do not need to know `task.txt`, `participant/`, the temporary run ID, or any
+internal path. Do not ask it to claim that independent verification passed.
+
+The generated workshop configuration does not replace or modify your normal
+Codex/Claude configuration or authentication state. For debugging only, add
+`--verbose` to the wrapper command to see launch details.
 
 ### Verify Lab 2
 
