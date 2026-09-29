@@ -176,11 +176,34 @@ review its completion message, and exit the agent completely. You do not need
 to know `task.txt`, `participant/`, the temporary run ID, or any internal
 path. Do not ask it to claim that independent verification passed.
 
-The wrapper preserves Codex isolation underneath by copying the generated
-configuration into a temporary workshop-owned Codex home. It never changes
-your normal Codex configuration, Claude configuration, or authentication
-state. For debugging only, add `--verbose` to the start command to see the
-exact workspace and launch details.
+### What the workshop configures for you
+
+The wrapper does more than launch your normal coding-agent session. It creates
+the workshop-controlled Lab 2 workspace and invokes the selected agent with
+the tested workshop boundary. Choose one participant path:
+
+```sh
+python3 scripts/workshop.py lab2 --agent codex
+python3 scripts/workshop.py lab2 --agent claude
+```
+
+Do not manually recreate the invocation. Under the hood, the implementation
+backs these controls:
+
+- **Codex:** workspace-write sandboxing, workshop-defined approval behavior
+  (`--ask-for-approval never`), an isolated temporary `CODEX_HOME` containing
+  the workshop configuration, and `web_search = "disabled"` for the exercise.
+- **Claude Code:** the generated Lab 2 workspace as the working directory,
+  `--restricted`, `--safe-mode`, `--strict-mcp-config`, an empty generated MCP
+  configuration, the bounded `Bash,Read,Edit,Write` tool set, manual permission
+  mode, and generated fail-closed sandbox/filesystem settings.
+
+Configured authority tells us what authority we intended to give the agent. It
+does not prove observed runtime behavior or an independently verified outcome;
+that is why Lab 2 still performs independent verification. The generated
+workshop configuration does not replace or modify your normal Codex/Claude
+configuration or authentication state. For debugging only, add `--verbose` to
+the wrapper command to see launch details.
 
 ### Verify Lab 2
 
@@ -242,6 +265,26 @@ Do not whitelist unexplained `__pycache__`, `.claude/.cc-writes`, or other
 artifacts. Do not whitelist what you have not explained. Do not delete an
 unexpected artifact before interpreting it.
 
+### Optional: try Lab 2 with the other agent
+
+The normal one-agent path is:
+
+```text
+lab2 → complete/exit agent → lab2 verify → review → final workshop cleanup
+```
+
+You do not need `lab2 cleanup` on that path. If you want to try the other
+coding agent, retry Lab 2, or recover a retained Lab 2 run, first run:
+
+```sh
+python3 scripts/workshop.py lab2 cleanup
+```
+
+Then start Lab 2 again with the other `--agent` value. This removes the
+retained workshop-owned Lab 2 run state, workspace, and evidence, plus any
+isolated workshop-owned Codex configuration for that run; it does not remove
+Kaapi or normal Claude/Codex configuration or authentication.
+
 ## 5. Cleanup — final participant step
 
 What you are doing: removing only workshop-created state whose ownership and
@@ -264,18 +307,6 @@ and evidence, and the temporary isolated Codex workshop home. It deliberately
 preserves your normal Codex configuration, normal Claude configuration, and
 authentication/session data. It never searches arbitrary temporary folders or
 uses a broad cleanup glob. Local cleanup is not proof of server-side token/session revocation.
-
-If you need to retry Lab 2 or switch agents after a run has exited or been
-verified, use the Lab 2-only reset instead:
-
-```sh
-python3 scripts/workshop.py lab2 cleanup
-```
-
-This removes only the provenance-verified retained Lab 2 run, workspace,
-evidence, and isolated workshop-owned agent state for that run. It does not
-remove Kaapi or normal Claude/Codex configuration or authentication. It is a
-recovery/retry operation, not part of the normal one-agent happy path.
 
 To inspect exact ownership decisions without deleting anything:
 

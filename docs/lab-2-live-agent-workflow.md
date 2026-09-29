@@ -20,17 +20,37 @@ python3 scripts/workshop.py lab2 --agent codex
 Use `claude` for Claude Code, or `python` in PowerShell. The wrapper prepares
 the disposable workspace, displays the task, starts the agent with the tested
 boundary, and remembers the retained Lab 2 run. Temporary paths stay hidden
-from the normal participant flow. Codex receives an automatically copied config in an
-isolated workshop-owned home. Claude starts with the generated workspace as
-its actual working directory while retaining:
+from the normal participant flow.
+
+## What the workshop configures for you
+
+The wrapper creates the workshop-controlled Lab 2 environment; it does not
+simply launch the user's normal coding-agent session. These implementation-
+backed controls are shown here to explain the boundary, not as a second
+manual execution path. Use the `workshop.py` command above.
+
+Codex receives an automatically copied configuration in an isolated temporary
+`CODEX_HOME`, including `sandbox_mode = "workspace-write"`,
+`approval_policy = "never"`, and `web_search = "disabled"`. Its tested
+invocation also uses:
+
+```text
+--strict-config --sandbox workspace-write --ask-for-approval never --cd <generated Lab 2 workspace>
+```
+
+Claude starts with the generated workspace as its actual working directory and
+uses:
 
 ```text
 --restricted --safe-mode --strict-mcp-config
 --tools Bash,Read,Edit,Write --permission-mode manual
 ```
 
-The generated MCP configuration is empty and the generated settings retain the
-tested sandbox/filesystem boundary. Do not weaken these settings.
+The generated MCP configuration is empty, and the generated settings retain
+the tested fail-closed sandbox/filesystem boundary. Configured authority tells
+us what authority we intended to give the agent; it does not prove observed
+runtime behavior or an independently verified outcome. Lab 2 therefore still
+performs independent verification. Do not weaken these settings.
 
 After the agent exits:
 
@@ -87,6 +107,26 @@ Normal output is concise. Use `python3 scripts/workshop.py lab2 verify
 Machine-readable evidence retains case results, hashes, inventories, scope
 review, workflow metadata, and limitations. Do not share sensitive paths or
 authentication material.
+
+## Optional: try Lab 2 with the other agent
+
+The normal one-agent path is:
+
+```text
+lab2 → complete/exit agent → lab2 verify → review → final workshop cleanup
+```
+
+This does not require `lab2 cleanup`. If you want to try the other coding
+agent, retry Lab 2, or recover a retained Lab 2 run, first run:
+
+```sh
+python3 scripts/workshop.py lab2 cleanup
+```
+
+Then start Lab 2 again with the other `--agent` value. This removes the
+retained workshop-owned Lab 2 run state, workspace, and evidence, plus any
+isolated workshop-owned Codex configuration for that run; it does not remove
+Kaapi or normal Claude/Codex configuration or authentication.
 
 ## Cleanup
 
